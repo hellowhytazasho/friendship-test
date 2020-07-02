@@ -1,30 +1,37 @@
 const mongoose = require('mongoose'); 
 
-const { ObjectId } = mongoose.Types;
-
 const Schema = mongoose.Schema;
 
 const modelSchema = new Schema({
-  questionId: {
-    type: Number,
-    required: true,
+  color: {
+    type: Array,
+    default: [],
   },
   question: {
     type: String,
     required: true,
   },
-  variants: {
-    type: Array,
+  position: {
+    type: Number,
+    required: true,
+  },
+  answers: {
+    type: [{
+      text: String,
+      emoji: String,
+    }],
     default: [],
   },
-  emoji: {
-    type: Array,
-    default: [],
-  },
-  cardColor: {
-    type: Array,
-    default: [],
-  }
-})
+},
+{ versionKey: false }
+);
+
+modelSchema.virtual('id').get(function(){
+  return this._id.toHexString();
+});
+
+modelSchema.set('toJSON', {
+  virtuals: true
+});
 
 module.exports = mongoose.model('questions', modelSchema);

@@ -9,14 +9,15 @@ const modelSchema = new Schema({
     type: String,
     required: true
   },
-  questionId: {
-    type: ObjectId,
-    required: true,
+  answer: {
+    type: [{
+      _id: false,
+      questionId: ObjectId,
+      answerId: ObjectId,
+    }],
   },
-  variants: {
-    type: Array,
-    default: [],
-  },
-})
+},
+{ versionKey: false }
+);
   
 module.exports =  mongoose.model('answers', modelSchema);

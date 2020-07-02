@@ -1,7 +1,9 @@
 const mongoose = require('mongoose'); 
+require('dotenv').config()
+
 const {init} = require('./initialDB')
 
-const url = 'mongodb+srv://tores:1q2w3e4r@cluster0-jylwb.mongodb.net/telegram';
+const url = process.env.DB_URL;
 
 mongoose.connect(url, {useNewUrlParser: true, useUnifiedTopology: true}).
   catch(error => handleError(error));
@@ -11,7 +13,6 @@ db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 db.once('open', function() {
   console.log('DB connect');
 });
-
 
 mongoose.connection.on('error', err => {
   console.error(err);
