@@ -10,8 +10,8 @@ const {
 const app = express();
 
 app.use(cors())
-app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 app.use('/sign-in', signInRouter);
 app.use('/quiz', quizRouter);
