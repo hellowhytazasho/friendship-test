@@ -1,7 +1,6 @@
 const mongoose = require('mongoose'); 
 require('dotenv').config()
 
-const {init} = require('./initialDB')
 
 const url = process.env.DB_URL;
 

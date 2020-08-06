@@ -13,7 +13,6 @@ app.use(cors())
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-app.use('/sign-in', signInRouter);
-app.use('/quiz', quizRouter);
+app.use('/user', signInRouter);
 
 module.exports = app;
