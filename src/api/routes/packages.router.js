@@ -8,9 +8,9 @@ const {
 
 const router = Router();
 
-router.get('/packages/:userId', async (req, res, next) => {
+router.get('/packages', async (req, res, next) => {
   try {
-    const data = await getPackages(req.params.userId);
+    const data = await getPackages(req.context.userId);
     res.send({ data });
   } catch (error) {
     next(error);
@@ -19,16 +19,18 @@ router.get('/packages/:userId', async (req, res, next) => {
 
 router.get('/add-package', async (req, res, next) => {
   try {
-    const data = await addPackage(req.query);
+    const data = await addPackage(req.context.userId, req.query);
     res.send({ data });
   } catch (error) {
     next(error);
   }
 });
 
-router.get('/delete-package/:userId/:trackNumber', async (req, res, next) => {
+router.get('/delete-package/:trackNumber', async (req, res, next) => {
   try {
-    const data = await deletePackage(req.params.userId, req.params.trackNumber);
+    const data = await deletePackage(
+      req.context.userId, req.params.trackNumber,
+    );
     res.send({ data });
   } catch (error) {
     next(error);

@@ -8,7 +8,7 @@ async function getPackages(userId) {
   return data;
 }
 
-async function addPackage({ packageNumber, userId, packageName }) {
+async function addPackage(userId, { packageNumber, packageName }) {
   if (packageNumber.length >= MIN_PACKAGE_NUMBER_LENGTH) {
     const packageEvents = await getPackageHistory(packageNumber);
     const userNumber = await userId;

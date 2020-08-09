@@ -12,5 +12,8 @@
   },
   "logger": {
     "level": "info"
+  },
+  "vkApp": {
+    "secretKey": "secretKey"
   }
 }

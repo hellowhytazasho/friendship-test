@@ -15,5 +15,8 @@
   },
   "logger": {
     "level": "LOG_LEVEL"
+  },
+  "vkApp": {
+    "secretKey": "VK_APP_SECRET_KEY"
   }
 }

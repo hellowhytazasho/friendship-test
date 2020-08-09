@@ -1,0 +1,7 @@
+{
+  "delay": 2,
+  "stdout": true,
+  "env": {
+    "NODE_ENV": "development"
+  }
+}

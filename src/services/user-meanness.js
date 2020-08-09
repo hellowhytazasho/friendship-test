@@ -1,29 +1,37 @@
-// const crypto = require('crypto');
-// const qs = require('querystring');
-// const logger = require('../logger')('app');
+const crypto = require('crypto');
+const qs = require('querystring');
+const config = require('config');
+const logger = require('../logger')('app');
 
-// function isAccess(url) {
-//   const urlParams = qs.parse(url);
-//   const ordered = {};
-//   Object.keys(urlParams).sort().forEach((key) => {
-//     if (key.slice(0, 3) === 'vk_') {
-//       ordered[key] = urlParams[key];
-//     }
-//   });
+const { vkApp: { secretKey: VK_APP_SECRET_KEY } } = config;
 
-//   const stringParams = qs.stringify(ordered);
-//   const paramsHash = crypto
-//     .createHmac('sha256', secretKey)
-//     .update(stringParams)
-//     .digest()
-//     .toString('base64')
-//     .replace(/\+/g, '-')
-//     .replace(/\//g, '_')
-//     .replace(/=$/, '');
+const PREFIX_LENGTH = 3;
 
-//   logger.info(paramsHash === urlParams.sign);
-// }
+function isAccess(urlParams) {
+  const ordered = {};
+  Object.keys(urlParams).sort().forEach((key) => {
+    if (key.slice(0, PREFIX_LENGTH) === 'vk_') {
+      ordered[key] = urlParams[key];
+    }
+  });
 
-// module.exports = {
-//   isAccess,
-// }
+  const stringParams = qs.stringify(ordered);
+  const paramsHash = crypto
+    .createHmac('sha256', VK_APP_SECRET_KEY)
+    .update(stringParams)
+    .digest()
+    .toString('base64')
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=$/, '');
+
+  logger.info(paramsHash === urlParams.sign);
+  if (paramsHash === urlParams.sign) {
+    return true;
+  }
+  return false;
+}
+
+module.exports = {
+  isAccess,
+};
