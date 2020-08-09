@@ -26,7 +26,7 @@ const SchemaDefinition = {
 
 const PackagesSchema = new Schema(SchemaDefinition, { versionKey: false });
 
-PackagesSchema.index({ packageNumber: 1 }, { unique: true });
+PackagesSchema.index({ packageNumber: 1 });
 
 const Package = mongoose.model('package', PackagesSchema);
 
