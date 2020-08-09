@@ -115,3 +115,5 @@ dist
 .pnp.*
 
 file.xls
+
+config/local.*

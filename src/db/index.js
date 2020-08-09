@@ -1,18 +1,47 @@
-const mongoose = require('mongoose'); 
-require('dotenv').config()
+const mongoose = require('mongoose');
+const config = require('config');
+const logger = require('../logger')('db');
 
+const { mongodb: { connection: MONGODB_CONFIG } } = config;
 
-const url = process.env.DB_URL;
+const {
+  username,
+  password,
+  host,
+  port,
+  db,
+  uri,
+} = MONGODB_CONFIG;
 
-mongoose.connect(url, {useNewUrlParser: true, useUnifiedTopology: true}).
-  catch(error => handleError(error));
+const getConnectionString = () => {
+  if (uri) {
+    return uri;
+  }
 
-let db = mongoose.connection;
-db.on('error', console.error.bind(console, 'MongoDB connection error:')); 
-db.once('open', function() {
-  console.log('DB connect');
+  return (
+    (username && password)
+      ? `mongodb://${username}:${password}@${host}:${port}/${db}?authSource=admin`
+      : `mongodb://${host}:${port}/${db}`
+  );
+};
+
+const connectionString = getConnectionString();
+
+mongoose.connect(
+  connectionString,
+  {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+    useCreateIndex: true,
+  },
+).catch((error) => logger.error(error));
+
+const { connection } = mongoose;
+
+connection.once('open', () => {
+  logger.info('connected');
 });
 
-mongoose.connection.on('error', err => {
-  console.error(err);
+connection.on('error', (err) => {
+  logger.error(err);
 });

@@ -1,0 +1,31 @@
+{
+    "env": {
+        "browser": true,
+        "commonjs": true,
+        "es2020": true
+    },
+    "extends": [
+        "airbnb-base"
+    ],
+    "parserOptions": {
+        "ecmaVersion": 11
+    },
+    "rules": {
+      "no-magic-numbers": ["error", {
+        "ignore": [-1, 0, 1],
+        "ignoreArrayIndexes": true,
+        "enforceConst": true
+      }],
+      "no-console": ["error"],
+      "max-len": ["error", {
+        "ignoreComments": true,
+        "code": 80,
+        "tabWidth": 2,
+        "ignoreTrailingComments": false,
+        "ignoreUrls": true,
+        "ignoreStrings": true,
+        "ignoreTemplateLiterals": true,
+        "ignoreRegExpLiterals": true
+      }]
+    }
+}

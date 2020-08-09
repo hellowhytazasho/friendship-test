@@ -1,6 +1,5 @@
-const signInRouter = require('./sign-in.router');
-
+const packagesRouter = require('./packages.router');
 
 module.exports = {
-  signInRouter,
+  packagesRouter,
 };

@@ -1,0 +1,19 @@
+{
+  "mongodb": {
+    "connection": {
+      "username": "MONGODB_USERNAME",
+      "password": "MONGODB_PASSWORD",
+      "uri": "DB_URL",
+      "host": "MONGODB_HOST",
+      "port": "MONGODB_PORT",
+      "db": "MONGODB_DATABASE"
+    }
+  },
+  "track24": {
+    "token": "TRACK24_TOKEN",
+    "endpoint": "TRACK24_ENDPOINT"
+  },
+  "logger": {
+    "level": "LOG_LEVEL"
+  }
+}

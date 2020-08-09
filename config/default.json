@@ -1,0 +1,16 @@
+{
+  "mongodb": {
+    "connection": {
+      "host": "localhost",
+      "port": "27017",
+      "db": "packages-finder"
+    }
+  },
+  "track24": {
+    "token": "token",
+    "endpoint": "https://api.track24.ru/tracking.json.php"
+  },
+  "logger": {
+    "level": "info"
+  }
+}
