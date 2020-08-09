@@ -17,16 +17,16 @@ router.get('/packages/:userId', async (req, res, next) => {
   }
 });
 
-router.post('/package', async (req, res, next) => {
+router.get('/add-package', async (req, res, next) => {
   try {
-    const data = await addPackage(req.body);
+    const data = await addPackage(req.query);
     res.send({ data });
   } catch (error) {
     next(error);
   }
 });
 
-router.delete('/package/:userId/:trackNumber', async (req, res, next) => {
+router.get('/delete-package/:userId/:trackNumber', async (req, res, next) => {
   try {
     const data = await deletePackage(req.params.userId, req.params.trackNumber);
     res.send({ data });
