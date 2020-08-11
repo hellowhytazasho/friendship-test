@@ -29,7 +29,7 @@ async function addPackage(userId, { packageNumber, packageName }) {
 }
 
 async function deletePackage(userId, trackNumber) {
-  await Package.deleteOne({ packageNumber: trackNumber });
+  await Package.deleteOne({ userId, packageNumber: trackNumber });
   return true;
 }
 
