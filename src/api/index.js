@@ -33,9 +33,10 @@ app.use((req, res, next) => {
 
 app.use((req, res, next) => {
   // eslint-disable-next-line camelcase
-  const { vk_user_id } = req.query;
+  const { packageNumber, vk_user_id } = req.query;
   req.context = {
     userId: vk_user_id,
+    packageNumber,
   };
   next();
 });

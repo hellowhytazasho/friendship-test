@@ -26,10 +26,10 @@ router.get('/add-package', async (req, res, next) => {
   }
 });
 
-router.get('/delete-package/:trackNumber', async (req, res, next) => {
+router.get('/delete-package', async (req, res, next) => {
   try {
     const data = await deletePackage(
-      req.context.userId, req.params.trackNumber,
+      req.context.userId, req.context.packageNumber,
     );
     res.send({ data });
   } catch (error) {
