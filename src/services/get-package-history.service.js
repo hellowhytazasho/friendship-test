@@ -3,22 +3,41 @@ const config = require('config');
 
 const { token, endpoint } = config.track24;
 
-async function getPackageHistory(trackNumber) {
-  const dataArray = [];
-  const url = `${endpoint}?apiKey=${token}&domain=demo.track24.ru&pretty=true&code=${trackNumber}`;
+const FELLS = [
+  'trackCreationDateTime',
+  'trackUpdateDateTime',
+  'trackUpdateDiffMinutes',
+  'trackDeliveredDateTime',
+  'fromCountryCode',
+  'fromCountry',
+  'fromName',
+  'destinationName',
+  'destinationCountryCode',
+  'destinationCountry',
+  'destinationPostalCode',
+  'fromCity',
+  'destinationCity',
+  'fromAddress',
+  'destinationAddress',
+  'collectOnDeliveryPrice',
+  'declaredValue',
+  'deliveredStatus',
+  'trackCodeModified',
+  'awaiting',
+  'events',
+];
+
+async function getPackageHistory(packageNumber) {
+  const saveData = {};
+  const url = `${endpoint}?apiKey=${token}&domain=demo.track24.ru&pretty=true&code=${packageNumber}`;
   const resp = await axios.get(url);
-  const respData = await resp.data.data.events;
-  await respData.forEach((elem) => {
-    dataArray.push({
-      eventDateTime: elem.eventDateTime,
-      operationDateTime: elem.operationDateTime,
-      operationType: elem.operationType,
-      operationPlaceName: elem.operationPlaceName,
-      serviceName: elem.serviceName,
-      operationAttributeOriginal: elem.operationAttributeOriginal,
-    });
+  const resData = resp.data.data;
+
+  FELLS.forEach((f) => {
+    saveData[f] = resData[f];
   });
-  return dataArray;
+
+  return saveData;
 }
 
 module.exports = {

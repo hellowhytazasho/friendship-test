@@ -4,6 +4,8 @@ const {
   getPackages,
   addPackage,
   deletePackage,
+  changePackageName,
+  changeDeliveredStatus,
 } = require('../../services/packages.service');
 
 const router = Router();
@@ -30,6 +32,29 @@ router.get('/delete-package', async (req, res, next) => {
   try {
     const data = await deletePackage(
       req.context.userId, req.context.packageNumber,
+    );
+    res.send({ data });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/change-package-name', async (req, res, next) => {
+  try {
+    const data = await changePackageName(
+      req.context.userId, req.context.packageNumber, req.query,
+    );
+    res.send({ data });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/change-delivered-status', async (req, res, next) => {
+  try {
+    const data = await changeDeliveredStatus(
+      req.context.userId,
+      req.context.packageNumber,
     );
     res.send({ data });
   } catch (error) {

@@ -10,6 +10,8 @@ const {
 } = require('./routes');
 const logger = require('../logger')('app');
 
+const { HttpError } = require('../errors');
+
 const app = express();
 
 const stream = {
@@ -28,7 +30,12 @@ app.use((req, res, next) => {
     process.env.NODE_ENV === 'development'
     || isAccess(req.query)
   ) next();
-  else next(new Error('Not access user'));
+  else {
+    next(new HttpError({
+      message: 'Not access user',
+      code: 401,
+    }));
+  }
 });
 
 app.use((req, res, next) => {
@@ -50,7 +57,10 @@ app.use((error, req, res, next) => {
   }
 
   res.send({
-    error: error.message,
+    error: {
+      status: error.code || 500,
+      message: error.message,
+    },
   });
 });
 
