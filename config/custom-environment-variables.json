@@ -18,5 +18,9 @@
   },
   "vkApp": {
     "secretKey": "VK_APP_SECRET_KEY"
+  },
+  "throttle": {
+    "timeOut": "THROTTLE_TIME_OUT",
+    "batchSize": "THROTTLE_BATCH_SIZE"
   }
 }
