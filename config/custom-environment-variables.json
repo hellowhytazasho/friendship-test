@@ -20,7 +20,7 @@
     "secretKey": "VK_APP_SECRET_KEY"
   },
   "throttle": {
-    "timeOut": "THROTTLE_TIME_OUT",
-    "batchSize": "THROTTLE_BATCH_SIZE"
+    "timeOut": "TIME_OUT",
+    "batchSize": "BATCH_SIZE"
   }
 }
