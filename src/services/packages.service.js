@@ -29,7 +29,7 @@ async function addPackage(userId, { packageNumber, packageName }) {
       }
       throw new HttpError({
         message: error.message,
-        code: 400,
+        code: 409,
       });
     }
   }
