@@ -10,6 +10,7 @@ const SchemaDefinition = {
   packageNumber: String,
   packageName: String,
   lastUpdate: Date,
+  notification: Boolean,
   trackCreationDateTime: String,
   trackUpdateDateTime: String,
   trackUpdateDiffMinutes: Number,

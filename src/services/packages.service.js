@@ -20,6 +20,7 @@ async function addPackage(userId, { packageNumber, packageName }) {
         packageName,
         packageNumber,
         lastUpdate: new Date(),
+        notification: false,
         ...packageEvents,
       });
       return true;
@@ -69,10 +70,24 @@ async function changeDeliveredStatus(userId, packageNumber) {
   return true;
 }
 
+async function changeNotificationStatus(userId, packageNumber, status) {
+  await Package.updateOne({
+    userId,
+    packageNumber,
+  }, {
+    $set: {
+      // eslint-disable-next-line no-unneeded-ternary
+      notification: status === 'true' ? true : false,
+    },
+  });
+  return true;
+}
+
 module.exports = {
   getPackages,
   addPackage,
   deletePackage,
   changePackageName,
   changeDeliveredStatus,
+  changeNotificationStatus,
 };
