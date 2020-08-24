@@ -2,6 +2,8 @@ const config = require('config');
 
 const { getPackageHistory } = require('../services/get-package-history.service');
 const { Package } = require('../model/package');
+const { updateDeliveryStatus } = require('./change-delivered-status');
+
 const logger = require('../logger')('update');
 
 const TWO_DAYS = 172800000;
@@ -64,7 +66,7 @@ async function updateHistoryData() {
     timeOut: 5500,
     fn: updatePackageHistory,
   });
-
+  updateDeliveryStatus();
   logger.info('Throttle done');
 }
 

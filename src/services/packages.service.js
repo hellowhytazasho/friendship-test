@@ -1,6 +1,7 @@
 const { Package } = require('../model/package');
 const { getPackageHistory } = require('./get-package-history.service');
 // eslint-disable-next-line no-unused-vars
+const { updateDeliveryStatus } = require('../helpers/change-delivered-status');
 const { updateHistoryData } = require('../helpers/update-package');
 const { HttpError } = require('../errors');
 
@@ -23,6 +24,7 @@ async function addPackage(userId, { packageNumber, packageName }) {
         notification: false,
         ...packageEvents,
       });
+      updateDeliveryStatus();
       return true;
     } catch (error) {
       if (error.message.startsWith('E11000')) {
@@ -77,7 +79,7 @@ async function changeNotificationStatus(userId, packageNumber, status) {
   }, {
     $set: {
       // eslint-disable-next-line no-unneeded-ternary
-      notification: status === 'true' ? true : false,
+      notification: status === 'true',
     },
   });
   return true;
