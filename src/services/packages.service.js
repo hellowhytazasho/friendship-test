@@ -2,7 +2,7 @@ const { Package } = require('../model/package');
 const { getPackageHistory } = require('./get-package-history.service');
 // eslint-disable-next-line no-unused-vars
 const { updateDeliveryStatus } = require('../helpers/change-delivered-status');
-const { updateHistoryData } = require('../helpers/update-package');
+require('../helpers/update-package');
 const { HttpError } = require('../errors');
 
 const MIN_PACKAGE_NUMBER_LENGTH = 5;

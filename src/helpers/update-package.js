@@ -1,4 +1,5 @@
 const config = require('config');
+const { CronJob } = require('cron');
 
 const { getPackageHistory } = require('../services/get-package-history.service');
 const { Package } = require('../model/package');
@@ -70,7 +71,12 @@ async function updateHistoryData() {
   logger.info('Throttle done');
 }
 
-//updateHistoryData();
+const job = new CronJob('0 0 20 */2 * *', () => {
+  updateHistoryData();
+  logger.info('Update started');
+});
+
+job.start();
 
 module.exports = {
   updateHistoryData,
