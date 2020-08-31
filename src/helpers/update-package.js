@@ -4,6 +4,7 @@ const { CronJob } = require('cron');
 const { getPackageHistory } = require('../services/get-package-history.service');
 const { Package } = require('../model/package');
 const { updateDeliveryStatus } = require('./change-delivered-status');
+const sendNotification = require('./notification');
 
 const logger = require('../logger')('update');
 
@@ -56,6 +57,7 @@ const updatePackageHistory = async ({ packageNumber }) => {
 
 async function updateHistoryData() {
   const data = await Package.find({
+    deliveredStatus: 0,
     lastUpdate: {
       $lt: new Date(Date.now() - TWO_DAYS),
     },
@@ -64,14 +66,15 @@ async function updateHistoryData() {
 
   await throttle({
     elements: data,
-    timeOut: 5500,
+    timeOut: 3500,
     fn: updatePackageHistory,
   });
   updateDeliveryStatus();
+  sendNotification(data);
   logger.info('Throttle done');
 }
 
-const job = new CronJob('0 0 20 */2 * *', () => {
+const job = new CronJob('0 0 20 * * *', () => {
   updateHistoryData();
   logger.info('Update started');
 });

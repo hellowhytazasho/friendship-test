@@ -17,7 +17,8 @@
     "level": "LOG_LEVEL"
   },
   "vkApp": {
-    "secretKey": "VK_APP_SECRET_KEY"
+    "secretKey": "VK_APP_SECRET_KEY",
+    "notificationKey": "VK_NOTIFICATION_KEY"
   },
   "throttle": {
     "timeOut": "TIME_OUT",

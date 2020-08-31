@@ -14,7 +14,8 @@
     "level": "info"
   },
   "vkApp": {
-    "secretKey": "secretKey"
+    "secretKey": "secretKey",
+    "notificationKey": "notificationKey"
   },
   "throttle": {
     "timeOut": 1000,
