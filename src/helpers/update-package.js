@@ -75,9 +75,8 @@ async function updateHistoryData() {
   logger.info('Throttle done');
 }
 
-updateHistoryData();
-
-const job = new CronJob('0 0 20 * * *', () => {
+const job = new CronJob('0 0 11 * * *', () => {
+  updateHistoryData();
   logger.info('Update started');
 });
 
