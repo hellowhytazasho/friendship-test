@@ -31,7 +31,7 @@ const throttle = async ({
     logger.info('Sliced elements count', slicedElements.length);
 
     /* eslint-disable no-await-in-loop */
-    await Promise.allSettled(slicedElements.map((item) => fn(item)));
+    await Promise.allSettled(slicedElements.map((item) => fn(item, item)));
 
     if (elems.length) {
       logger.info('wait', { timeOut });
@@ -41,10 +41,9 @@ const throttle = async ({
   }
 };
 
-const updatePackageHistory = async ({ packageNumber }) => {
+const updatePackageHistory = async ({ packageNumber }, elems) => {
   const ph = await getPackageHistory(packageNumber);
-
-  await Package.updateOne({
+  await Package.updateMany({
     packageNumber,
     deliveredStatus: 0, // not delivered
   }, {
@@ -53,6 +52,9 @@ const updatePackageHistory = async ({ packageNumber }) => {
       lastUpdate: new Date(),
     },
   });
+  if (ph.events.length !== elems.events.length) {
+    sendNotification(elems);
+  }
 };
 
 async function updateHistoryData() {
@@ -62,20 +64,20 @@ async function updateHistoryData() {
       $lt: new Date(Date.now() - TWO_DAYS),
     },
   });
-  logger.info('Data for update', data.length);
 
+  logger.info('Data for update', data.length);
   await throttle({
     elements: data,
     timeOut: 3500,
     fn: updatePackageHistory,
   });
   updateDeliveryStatus();
-  sendNotification(data);
   logger.info('Throttle done');
 }
 
+updateHistoryData();
+
 const job = new CronJob('0 0 20 * * *', () => {
-  updateHistoryData();
   logger.info('Update started');
 });
 

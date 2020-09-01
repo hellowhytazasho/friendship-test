@@ -6,31 +6,31 @@ const { Package } = require('../model/package');
 const { notificationKey } = config.vkApp;
 
 async function sendNotification(data) {
-  data.forEach(async (elem) => {
-    let packageInfo = '';
-    if (elem.packageName === undefined) {
-      packageInfo = elem.packageNumber;
-    } else {
-      // eslint-disable-next-line no-unused-vars
-      packageInfo = elem.packageName;
-    }
+  let packageInfo = '';
+  let message = '';
+  if (data.packageName === undefined) {
+    packageInfo = data.packageNumber;
+  } else {
+    packageInfo = data.packageName;
+  }
+  const upData = await Package.find({
+    userId: data.userId,
+    packageNumber: data.packageNumber,
+  }).lean();
+  const dataArray = upData[0].events;
+  const event = dataArray[dataArray.length - 1];
+  const { operationAttributeOriginal } = event;
 
-    const upData = await Package.find({
-      userId: elem.userId,
-      packageNumber: elem.packageNumber,
-    }).lean();
-
-    const dataArray = upData[0].events;
-
-    const event = dataArray[dataArray.length - 1];
-    const { operationAttributeOriginal } = event;
-
-    const message = `${packageInfo}: ${operationAttributeOriginal}`;
-    const url = `https://api.vk.com/method/notifications.sendMessage?user_ids=${elem.userId}&message=${encodeURIComponent(message)}&access_token=${notificationKey}&v=5.122`;
-    const resp = await axios.get(url);
-    const respData = resp.data;
-    logger.info(`Send notification to: ${elem.userId}. Status: ${respData}`);
-  });
+  if (operationAttributeOriginal.indexOf('Track24.ru') !== -1) {
+    const text = 'Трек-код внесен в базу для автоматического мониторинга.';
+    message = `${packageInfo}: ${text}`;
+  } else {
+    message = `${packageInfo}: ${operationAttributeOriginal}`;
+  }
+  const url = `https://api.vk.com/method/notifications.sendMessage?user_ids=${data.userId}&message=${encodeURIComponent(message)}&access_token=${notificationKey}&v=5.122`;
+  const resp = await axios.get(url);
+  const respData = resp.data;
+  console.log(respData);
 }
 
 module.exports = sendNotification;
