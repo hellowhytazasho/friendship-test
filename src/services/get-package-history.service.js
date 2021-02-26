@@ -29,6 +29,7 @@ const FELLS = [
 
 async function getPackageHistory(packageNumber) {
   const saveData = {};
+
   const url = `${endpoint}?apiKey=${token}&domain=demo.track24.ru&pretty=true&code=${packageNumber}`;
   const resp = await axios.get(url);
   const resData = resp.data.data;
@@ -36,6 +37,13 @@ async function getPackageHistory(packageNumber) {
   FELLS.forEach((f) => {
     saveData[f] = resData[f];
   });
+
+  const packageFirstEvent = saveData.events[0].operationAttribute;
+  const packageFirstEventIndex = packageFirstEvent.indexOf('Track24');
+
+  if (packageFirstEventIndex !== -1) {
+    saveData.events[0].operationAttribute = packageFirstEvent.replace(/Track24 /g, '');
+  }
 
   return saveData;
 }

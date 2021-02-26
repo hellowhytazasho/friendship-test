@@ -17,6 +17,7 @@ async function sendNotification(data) {
     userId: data.userId,
     packageNumber: data.packageNumber,
   }).lean();
+
   const dataArray = upData[0].events;
   const event = dataArray[dataArray.length - 1];
   const { operationAttributeOriginal } = event;
@@ -30,7 +31,7 @@ async function sendNotification(data) {
   const url = `https://api.vk.com/method/notifications.sendMessage?user_ids=${data.userId}&message=${encodeURIComponent(message)}&access_token=${notificationKey}&v=5.122`;
   const resp = await axios.get(url);
   const respData = resp.data;
-  console.log(respData);
+  logger.info(respData);
 }
 
 module.exports = sendNotification;
