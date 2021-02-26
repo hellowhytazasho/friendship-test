@@ -38,11 +38,11 @@ async function getPackageHistory(packageNumber) {
     saveData[f] = resData[f];
   });
 
-  const packageFirstEvent = saveData.events[0].operationAttribute;
+  const packageFirstEvent = saveData.events[0].operationAttributeOriginal;
   const packageFirstEventIndex = packageFirstEvent.indexOf('Track24');
 
   if (packageFirstEventIndex !== -1) {
-    saveData.events[0].operationAttribute = packageFirstEvent.replace(/Track24 /g, '');
+    saveData.events[0].operationAttributeOriginal = packageFirstEvent.replace(/Track24 /g, '');
   }
 
   return saveData;
