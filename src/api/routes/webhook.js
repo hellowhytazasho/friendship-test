@@ -247,7 +247,6 @@ router.post('/webhook', async (req, res) => {
         let packageData = await Package.findOne({ userId, packageNumber: request.command.toUpperCase() }).exec();
         const packageDataWithName = await Package.find({ userId });
         let flag = true;
-        console.log(packageData);
 
         if (packageData === null) {
           packageDataWithName.forEach((el) => {
@@ -277,7 +276,22 @@ router.post('/webhook', async (req, res) => {
           });
         }
 
-        if (!flag) return;
+        if (flag) {
+          res.send({
+            response: {
+              text: 'Я не нашла у Вас посылку с таким именем.',
+              tts: 'Я не нашла у Вас посылку с таким именем.',
+              end_session: true,
+            },
+            ...static_required_data,
+          });
+          delete sessions[session_id];
+          return;
+        }
+        if (!flag) {
+          // eslint-disable-next-line consistent-return
+          return;
+        }
 
         if (packageData === null) {
           packageData = await addPackage(userId, { packageNumber: request.command.toUpperCase() });
