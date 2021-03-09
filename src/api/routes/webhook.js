@@ -216,7 +216,7 @@ router.post('/webhook', async (req, res) => {
         console.log(packageData.events);
         const packageEventsLength = packageData.events.length;
         const { serviceName } = packageData.events[packageEventsLength - 1];
-        const deliveredDateTime = packageData.trackDeliveredDateTime;
+        const deliveredDateTime = packageData.trackDeliveredDateTime === '' ? 'неизвестно' : packageData.trackDeliveredDateTime;
 
         let lastPlace;
         let lastWeight;
@@ -508,6 +508,7 @@ router.post('/webhook', async (req, res) => {
 
         delete sessions[session_id];
       }
+      // eslint-disable-next-line no-useless-return
       return;
     } else if (session_payload.act === Activities.RENAME) {
       const { userId } = session.user;
