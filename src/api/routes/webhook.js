@@ -301,7 +301,7 @@ router.post('/webhook', async (req, res) => {
       const { userId } = session.user;
 
       if (request.command === 'обо всех') {
-        const userPackages = await Package.find({ userId }).exec();
+        const userPackages = await Package.find({ userId, deliveredStatus: 0 }).exec();
         if (userPackages) {
           await Package.updateMany({
             userId,
@@ -352,66 +352,67 @@ router.post('/webhook', async (req, res) => {
     } else if (session_payload.act === Activities.NOTIFICATION_INPUT_TRACK) {
       const { userId } = session.user;
 
-      const
-        userPackagesWithName = await Package.findOne({
-          userId,
-          packageName: request.original_utterance,
-        }).exec();
-      const userPackagesWithNumber = await Package.findOne({
-        userId,
-        packageNumber: request.original_utterance,
-      }).exec();
-      if (userPackagesWithName) {
-        res.send({
-          response: {
-            text: `Подтвердите трек-номер посылки — ${userPackages.packageNumber}.`,
-            tts: `Подтвердите трек-номер посылки — ${userPackages.packageNumber}.`,
-            end_session: false,
-            buttons: [{
-              title: 'Верно',
-              payload: {
-                type: 0,
+      const userPackages = await Package.find({ userId }).exec();
+      let flag = true;
+
+      userPackages.forEach(async (el) => {
+        if (el.packageName !== null && el.packageName !== undefined && el.packageName.toUpperCase() === request.original_utterance.toUpperCase()) {
+          flag = false;
+          res.send({
+            response: {
+              text: `Подтвердите трек-номер посылки — ${el.packageNumber}.`,
+              tts: `Подтвердите трек-номер посылки — ${el.packageNumber}.`,
+              end_session: false,
+              buttons: [{
+                title: 'Верно',
+                payload: {
+                  type: 0,
+                },
               },
-            },
-            {
-              title: 'Отмена',
-              payload: {
-                type: 1,
+              {
+                title: 'Отмена',
+                payload: {
+                  type: 1,
+                },
               },
+              ],
             },
-            ],
-          },
-          ...static_required_data,
-        });
+            ...static_required_data,
+          });
 
-        sessions[session_id] = {
-          act: Activities.NOTIFICATION_ACCEPT, trackNumber: userPackagesWithName.packageNumber,
-        };
-      } else if (userPackagesWithNumber) {
-        await Package.updateOne({
-          userId,
-          packageNumber: request.original_utterance,
-        }, {
-          $set: {
-            notification: true,
-          },
-        });
+          sessions[session_id] = {
+            act: Activities.NOTIFICATION_ACCEPT, trackNumber: el.packageNumber,
+          };
+        }
+        if (el.packageNumber.toUpperCase() === request.original_utterance.toUpperCase()) {
+          flag = false;
 
-        res.send({
-          response: {
-            text: 'Теперь разрешите присылать Вам уведомления в мини-приложении.',
-            tts: 'Теперь разрешите присылать Вам уведомления в мини-приложении.',
-            card: {
-              type: 'MiniApp',
-              url: 'https://vk.com/track',
+          await Package.updateOne({
+            userId,
+            packageNumber: request.original_utterance.toUpperCase(),
+          }, {
+            $set: {
+              notification: true,
             },
-            end_session: true,
-          },
-          ...static_required_data,
-        });
+          });
+          console.log(el.packageNumber.toUpperCase());
 
-        delete sessions[session_id];
-      } else {
+          res.send({
+            response: {
+              text: 'Теперь разрешите присылать Вам уведомления в мини-приложении.',
+              tts: 'Теперь разрешите присылать Вам уведомления в мини-приложении.',
+              card: {
+                type: 'MiniApp',
+                url: 'https://vk.com/track',
+              },
+              end_session: true,
+            },
+            ...static_required_data,
+          });
+          delete sessions[session_id];
+        }
+      });
+      if (flag) {
         res.send({
           response: {
             text: 'Я не нашла у Вас такой посылки.',
@@ -420,8 +421,6 @@ router.post('/webhook', async (req, res) => {
           },
           ...static_required_data,
         });
-
-        delete sessions[session_id];
       }
     } else if (session_payload.act === Activities.NOTIFICATION_ACCEPT) {
       if (request.command === 'верно') {
