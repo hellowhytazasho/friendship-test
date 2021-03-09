@@ -274,23 +274,22 @@ router.post('/webhook', async (req, res) => {
               };
             }
           });
-        }
-
-        if (flag) {
-          res.send({
-            response: {
-              text: 'Я не нашла у Вас посылку с таким именем.',
-              tts: 'Я не нашла у Вас посылку с таким именем.',
-              end_session: true,
-            },
-            ...static_required_data,
-          });
-          delete sessions[session_id];
-          return;
-        }
-        if (!flag) {
-          // eslint-disable-next-line consistent-return
-          return;
+          if (flag) {
+            res.send({
+              response: {
+                text: 'Я не нашла у Вас посылку с таким именем.',
+                tts: 'Я не нашла у Вас посылку с таким именем.',
+                end_session: true,
+              },
+              ...static_required_data,
+            });
+            delete sessions[session_id];
+            return;
+          }
+          if (!flag) {
+            // eslint-disable-next-line consistent-return
+            return;
+          }
         }
 
         if (packageData === null) {
