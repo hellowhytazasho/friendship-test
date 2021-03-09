@@ -239,11 +239,24 @@ router.post('/webhook', async (req, res) => {
         delete sessions[session_id];
       } else {
         const { userId } = session.user;
-        let packageData = await Package.findOne({ packageNumber: request.command }).exec();
+        let packageData = await Package.findOne({ packageNumber: request.command.toUpperCase() }).exec();
         if (packageData === null) {
-          packageData = await addPackage(userId, { packageNumber: request.command, packageName: null });
+          packageData = await addPackage(userId, { packageNumber: request.command.toUpperCase() });
         }
         console.log(packageData);
+
+        if (packageData.status === 'error') {
+          res.send({
+            response: {
+              text: 'Трек-код не действителен.',
+              tts: 'Трек-код не действителен.',
+              end_session: true,
+            },
+            ...static_required_data,
+          });
+          delete sessions[session_id];
+          return;
+        }
 
         if (packageData.events.length === 1) {
           res.send({
