@@ -140,6 +140,10 @@ router.post('/webhook', async (req, res) => {
         response: {
           text: message,
           tts: message,
+          card: {
+            type: 'MiniApp',
+            url: 'https://vk.com/track',
+          },
           end_session: false,
         },
         ...static_required_data,
@@ -460,43 +464,42 @@ router.post('/webhook', async (req, res) => {
       return;
     } else if (session_payload.act === Activities.RENAME) {
       const { userId } = session.user;
+      const userPackages = await Package.find({ userId }).exec();
+      let flag = true;
 
-      const
-        userPackagesWithName = await Package.findOne({
-          userId,
-          packageName: request.original_utterance,
-        }).exec();
-      const userPackagesWithNumber = await Package.findOne({
-        userId,
-        packageNumber: request.original_utterance,
-      }).exec();
-      if (userPackagesWithName) {
-        res.send({
-          response: {
-            text: 'Введите новое название.',
-            tts: 'Введите новое название.',
-            end_session: false,
-          },
-          ...static_required_data,
-        });
+      userPackages.forEach((el) => {
+        if (el.packageName !== null && el.packageName !== undefined && el.packageName.toUpperCase() === request.original_utterance.toUpperCase()) {
+          res.send({
+            response: {
+              text: 'Введите новое название.',
+              tts: 'Введите новое название.',
+              end_session: false,
+            },
+            ...static_required_data,
+          });
 
-        sessions[session_id] = {
-          act: Activities.RENAME_INPUT, trackNumber: userPackagesWithName.packageNumber,
-        };
-      } else if (userPackagesWithNumber) {
-        res.send({
-          response: {
-            text: 'Введите новое название.',
-            tts: 'Введите новое название.',
-            end_session: false,
-          },
-          ...static_required_data,
-        });
+          sessions[session_id] = {
+            act: Activities.RENAME_INPUT, trackNumber: el.packageNumber.toUpperCase(),
+          };
+          flag = false;
+        }
+        if (el.packageNumber.toUpperCase() === request.original_utterance.toUpperCase()) {
+          res.send({
+            response: {
+              text: 'Введите новое название.',
+              tts: 'Введите новое название.',
+              end_session: false,
+            },
+            ...static_required_data,
+          });
 
-        sessions[session_id] = {
-          act: Activities.RENAME_INPUT, trackNumber: userPackagesWithNumber.packageNumber,
-        };
-      } else {
+          sessions[session_id] = {
+            act: Activities.RENAME_INPUT, trackNumber: el.packageNumber.toUpperCase(),
+          };
+          flag = false;
+        }
+      });
+      if (flag) {
         res.send({
           response: {
             text: 'Я не нашла у Вас такой посылки.',
@@ -505,15 +508,13 @@ router.post('/webhook', async (req, res) => {
           },
           ...static_required_data,
         });
-
-        delete sessions[session_id];
       }
     } else if (session_payload.act === Activities.RENAME_INPUT) {
       const { userId } = session.user;
       const newName = {
         newPackageName: request.original_utterance.trim(),
       };
-
+      console.log(newName, session_payload.trackNumber);
       await changePackageName(userId, session_payload.trackNumber, newName);
 
       res.send({
