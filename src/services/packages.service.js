@@ -25,7 +25,7 @@ async function addPackage(userId, { packageNumber, packageName }) {
         ...packageEvents,
       });
       updateDeliveryStatus();
-      return true;
+      return packageEvents;
     } catch (error) {
       if (error.message.startsWith('E11000')) {
         error.message = 'User already has this track code';

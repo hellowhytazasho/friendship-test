@@ -34,6 +34,8 @@ async function getPackageHistory(packageNumber) {
   const resp = await axios.get(url);
   const resData = resp.data.data;
 
+  if (resData === undefined) return { status: 'error' };
+
   FELLS.forEach((f) => {
     saveData[f] = resData[f];
   });
@@ -44,7 +46,7 @@ async function getPackageHistory(packageNumber) {
   if (packageFirstEventIndex !== -1) {
     saveData.events[0].operationAttributeOriginal = packageFirstEvent.replace(/Track24 /g, '');
   }
-
+  saveData.status = 'good';
   return saveData;
 }
 

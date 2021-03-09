@@ -7,6 +7,7 @@ const { isAccess } = require('../services/user-meanness');
 
 const {
   packagesRouter,
+  webhookRouter,
 } = require('./routes');
 const logger = require('../logger')('app');
 
@@ -29,6 +30,7 @@ app.use((req, res, next) => {
   if (
     process.env.NODE_ENV === 'development'
     || isAccess(req.query)
+    || req.originalUrl === '/webhook'
   ) next();
   else {
     next(new HttpError({
@@ -49,6 +51,7 @@ app.use((req, res, next) => {
 });
 
 app.use('/', packagesRouter);
+app.use('/', webhookRouter);
 
 // eslint-disable-next-line no-unused-vars
 app.use((error, req, res, next) => {
