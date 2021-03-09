@@ -244,7 +244,41 @@ router.post('/webhook', async (req, res) => {
         delete sessions[session_id];
       } else {
         const { userId } = session.user;
-        let packageData = await Package.findOne({ packageNumber: request.command.toUpperCase() }).exec();
+        let packageData = await Package.findOne({ userId, packageNumber: request.command.toUpperCase() }).exec();
+        const packageDataWithName = await Package.find({ userId });
+        let flag = true;
+        console.log(packageData);
+
+        if (packageData === null) {
+          packageDataWithName.forEach((el) => {
+            if (el.packageName !== null && el.packageName !== undefined && el.packageName.toUpperCase() === request.original_utterance.toUpperCase()) {
+              const packageEventsLength = el.events.length;
+              const lastOperation = el.events[packageEventsLength - 1].operationAttributeOriginal === undefined ? el.events[packageEventsLength - TWO_WORDS].operationAttributeOriginal : el.events[packageEventsLength - 1].operationAttributeOriginal;
+              flag = false;
+              res.send({
+                response: {
+                  text: `Последний статус: ${lastOperation}.`,
+                  tts: `Последний статус: ${lastOperation}.`,
+                  end_session: false,
+                  buttons: [{
+                    title: 'Подробнее',
+                    payload: {
+                      type: 0,
+                    },
+                  },
+                  ],
+                },
+                ...static_required_data,
+              });
+              sessions[session_id] = {
+                act: Activities.TRACK, trackNumber: el.packageNumber.toUpperCase(),
+              };
+            }
+          });
+        }
+
+        if (!flag) return;
+
         if (packageData === null) {
           packageData = await addPackage(userId, { packageNumber: request.command.toUpperCase() });
         }
