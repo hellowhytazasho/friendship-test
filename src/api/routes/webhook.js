@@ -209,6 +209,7 @@ router.post('/webhook', async (req, res) => {
         });
       } else if (request.command === 'подробнее') {
         const packageData = await await Package.findOne({ packageNumber: session_payload.trackNumber }).exec();
+        console.log(packageData.events);
         const packageEventsLength = packageData.events.length;
         const { serviceName } = packageData.events[packageEventsLength - 1];
         const deliveredDateTime = packageData.trackDeliveredDateTime;
@@ -243,7 +244,6 @@ router.post('/webhook', async (req, res) => {
         if (packageData === null) {
           packageData = await addPackage(userId, { packageNumber: request.command.toUpperCase() });
         }
-        console.log(packageData);
 
         if (packageData.status === 'error') {
           res.send({
@@ -290,7 +290,7 @@ router.post('/webhook', async (req, res) => {
           ...static_required_data,
         });
         sessions[session_id] = {
-          act: Activities.TRACK, trackNumber: request.command,
+          act: Activities.TRACK, trackNumber: request.command.toUpperCase(),
         };
       }
     } else if (session_payload.act === Activities.NOTIFICATION) {
