@@ -251,6 +251,7 @@ router.post('/webhook', async (req, res) => {
         if (packageData === null) {
           try {
             packageData = await addPackage(userId, { packageNumber: request.command.toUpperCase() });
+            await Package.remove({ userId, events: { $exists: true, $size: 0 } });
           } catch (error) {
             console.log('err');
           }
