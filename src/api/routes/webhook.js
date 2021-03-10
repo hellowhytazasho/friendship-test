@@ -37,6 +37,7 @@ const Activities = {
       || contains(tokens, ['где', 'посыл']) === TWO_WORDS
       || contains(tokens, ['отслед', 'друг', 'посыл']) === TWO_WORDS,
   TRANSIT: 1,
+  DETAIL: 6,
   isTransit: () => contains(tokens, ['какие', 'посыл', 'не', 'достав']) === FOUR_WORDS
       || contains(tokens, ['какие', 'посыл', 'недостав']) === THREE_WORDS
       || contains(tokens, ['какие', 'посыл', 'едут']) === THREE_WORDS
@@ -234,43 +235,6 @@ router.post('/webhook', async (req, res) => {
           },
           ...static_required_data,
         });
-      } else if (request.command === 'подробнее') {
-        const packageData = await await Package.findOne({ packageNumber: session_payload.trackNumber }).exec();
-        const packageEventsLength = packageData.events.length;
-        const { serviceName } = packageData.events[packageEventsLength - 1];
-        const deliveredDateTime = packageData.trackDeliveredDateTime === '' ? 'неизвестно' : packageData.trackDeliveredDateTime;
-
-        let lastPlace;
-        let lastWeight;
-        let lastService;
-
-        if (serviceName === 'Track24') {
-          lastPlace = packageData.events[packageEventsLength - TWO_ELEMENTS].operationPlaceNameOriginal === '' ? 'неизвестно' : packageData.events[packageEventsLength - TWO_ELEMENTS].operationPlaceNameOriginal;
-          lastWeight = packageData.events[packageEventsLength - TWO_ELEMENTS].itemWeight === '' ? 'неизвестно' : packageData.events[packageEventsLength - TWO_ELEMENTS].itemWeight;
-          lastService = packageData.events[packageEventsLength - TWO_ELEMENTS].serviceName === '' ? 'неизвестно' : packageData.events[packageEventsLength - TWO_ELEMENTS].serviceName;
-        } else {
-          lastPlace = packageData.events[packageEventsLength - 1].operationPlaceNameOriginal;
-          lastWeight = packageData.events[packageEventsLength - 1].itemWeight;
-          lastService = packageData.events[packageEventsLength - 1].serviceName;
-        }
-
-        res.send({
-          response: {
-            text: `Подробности посылки: \nМаршрут: ${lastPlace} \nВес: ${lastWeight} \n Отправитель: ${lastService} \nПриблизительная дата прибытия: ${deliveredDateTime}.`,
-            tts: `Подробности посылки: \nМаршрут: ${lastPlace} \nВес: ${lastWeight} \n Отправитель: ${lastService} \nПриблизительная дата прибытия: ${deliveredDateTime}.`,
-            buttons: [{
-              title: 'Отследить другую посылку',
-              payload: {
-                type: 0,
-              },
-            },
-            ],
-            end_session: true,
-          },
-          ...static_required_data,
-        });
-
-        delete sessions[session_id];
       } else {
         const { userId } = session.user;
         let packageData = await Package.findOne({ userId, packageNumber: request.command.toUpperCase() }).exec();
@@ -308,7 +272,7 @@ router.post('/webhook', async (req, res) => {
                 ...static_required_data,
               });
               sessions[session_id] = {
-                act: Activities.TRACK, trackNumber: el.packageNumber.toUpperCase(),
+                act: Activities.DETAIL, trackNumber: el.packageNumber.toUpperCase(),
               };
             }
           });
@@ -319,6 +283,12 @@ router.post('/webhook', async (req, res) => {
                 tts: 'Я не нашла у Вас посылку с таким именем.',
                 buttons: [{
                   title: 'Отследить другую посылку',
+                  payload: {
+                    type: 0,
+                  },
+                },
+                {
+                  title: 'Отмена',
                   payload: {
                     type: 0,
                   },
@@ -396,8 +366,49 @@ router.post('/webhook', async (req, res) => {
           ...static_required_data,
         });
         sessions[session_id] = {
-          act: Activities.TRACK, trackNumber: request.command.toUpperCase(),
+          act: Activities.DETAIL, trackNumber: request.command.toUpperCase(),
         };
+      }
+    } else if (session_payload.act === Activities.DETAIL) {
+      if (request.command === 'подробнее') {
+        const packageData = await await Package.findOne({ packageNumber: session_payload.trackNumber }).exec();
+        const packageEventsLength = packageData.events.length;
+        const { serviceName } = packageData.events[packageEventsLength - 1];
+        const deliveredDateTime = packageData.trackDeliveredDateTime === '' ? 'неизвестно' : packageData.trackDeliveredDateTime;
+
+        let lastPlace;
+        let lastWeight;
+        let lastService;
+
+        if (serviceName === 'Track24') {
+          lastPlace = packageData.events[packageEventsLength - TWO_ELEMENTS].operationPlaceNameOriginal === '' ? 'неизвестно' : packageData.events[packageEventsLength - TWO_ELEMENTS].operationPlaceNameOriginal;
+          lastWeight = packageData.events[packageEventsLength - TWO_ELEMENTS].itemWeight === '' ? 'неизвестно' : packageData.events[packageEventsLength - TWO_ELEMENTS].itemWeight;
+          lastService = packageData.events[packageEventsLength - TWO_ELEMENTS].serviceName === '' ? 'неизвестно' : packageData.events[packageEventsLength - TWO_ELEMENTS].serviceName;
+        } else {
+          lastPlace = packageData.events[packageEventsLength - 1].operationPlaceNameOriginal;
+          lastWeight = packageData.events[packageEventsLength - 1].itemWeight;
+          lastService = packageData.events[packageEventsLength - 1].serviceName;
+        }
+
+        res.send({
+          response: {
+            text: `Подробности посылки: \nМаршрут: ${lastPlace} \nВес: ${lastWeight} \nОтправитель: ${lastService} \nПриблизительная дата прибытия: ${deliveredDateTime}.`,
+            tts: `Подробности посылки: \nМаршрут: ${lastPlace} \nВес: ${lastWeight} \nОтправитель: ${lastService} \nПриблизительная дата прибытия: ${deliveredDateTime}.`,
+            buttons: [{
+              title: 'Отследить другую посылку',
+              payload: {
+                type: 0,
+              },
+            },
+            ],
+            end_session: true,
+          },
+          ...static_required_data,
+        });
+
+        delete sessions[session_id];
+      } else {
+        delete sessions[session_id];
       }
     } else if (session_payload.act === Activities.NOTIFICATION) {
       const { userId } = session.user;
