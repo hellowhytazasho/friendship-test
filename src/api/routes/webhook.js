@@ -34,7 +34,8 @@ const Activities = {
   TRACK: 0,
   isTrack: () => contains(tokens, ['отследи', 'посыл']) === TWO_WORDS
       || contains(tokens, ['определ', 'посыл']) === TWO_WORDS
-      || contains(tokens, ['где', 'посыл']) === TWO_WORDS,
+      || contains(tokens, ['где', 'посыл']) === TWO_WORDS
+      || contains(tokens, ['отслед', 'друг', 'посыл']) === TWO_WORDS,
   TRANSIT: 1,
   isTransit: () => contains(tokens, ['какие', 'посыл', 'не', 'достав']) === FOUR_WORDS
       || contains(tokens, ['какие', 'посыл', 'недостав']) === THREE_WORDS
@@ -87,8 +88,8 @@ router.post('/webhook', async (req, res) => {
   } else if (Activities.isTrack()) {
     res.send({
       response: {
-        text: 'Чтобы отследить посылку, введите трек-номер.',
-        tts: 'Чтобы отследить посылку, введите трек-номер.',
+        text: 'Чтобы отследить посылку, введите трек-номер или название посылки.',
+        tts: 'Чтобы отследить посылку, введите трек-номер или название посылки.',
         end_session: false,
       },
       ...static_required_data,
@@ -140,6 +141,13 @@ router.post('/webhook', async (req, res) => {
         response: {
           text: message,
           tts: message,
+          buttons: [{
+            title: 'Отследить посылку',
+            payload: {
+              type: 0,
+            },
+          },
+          ],
           card: {
             type: 'MiniApp',
             url: 'https://vk.com/track',
@@ -153,11 +161,19 @@ router.post('/webhook', async (req, res) => {
         response: {
           text: 'У Вас нет активных посылок.',
           tts: 'У Вас нет активных посылок.',
+          buttons: [{
+            title: 'Отследить другую посылку',
+            payload: {
+              type: 0,
+            },
+          },
+          ],
           end_session: true,
         },
         ...static_required_data,
       });
     }
+    delete sessions[session_id];
     return;
   } else if (Activities.isNotification()) {
     res.send({
@@ -207,13 +223,19 @@ router.post('/webhook', async (req, res) => {
           response: {
             text: 'Упс, кажется в трек-номере есть ошибочка.',
             tts: 'Упс, кажется в трек-номере есть ошибочка.',
+            buttons: [{
+              title: 'Отследить другую посылку',
+              payload: {
+                type: 0,
+              },
+            },
+            ],
             end_session: true,
           },
           ...static_required_data,
         });
       } else if (request.command === 'подробнее') {
         const packageData = await await Package.findOne({ packageNumber: session_payload.trackNumber }).exec();
-        console.log(packageData.events);
         const packageEventsLength = packageData.events.length;
         const { serviceName } = packageData.events[packageEventsLength - 1];
         const deliveredDateTime = packageData.trackDeliveredDateTime === '' ? 'неизвестно' : packageData.trackDeliveredDateTime;
@@ -236,6 +258,13 @@ router.post('/webhook', async (req, res) => {
           response: {
             text: `Подробности посылки: \nМаршрут: ${lastPlace} \nВес: ${lastWeight} \n Отправитель: ${lastService} \nПриблизительная дата прибытия: ${deliveredDateTime}.`,
             tts: `Подробности посылки: \nМаршрут: ${lastPlace} \nВес: ${lastWeight} \n Отправитель: ${lastService} \nПриблизительная дата прибытия: ${deliveredDateTime}.`,
+            buttons: [{
+              title: 'Отследить другую посылку',
+              payload: {
+                type: 0,
+              },
+            },
+            ],
             end_session: true,
           },
           ...static_required_data,
@@ -288,6 +317,13 @@ router.post('/webhook', async (req, res) => {
               response: {
                 text: 'Я не нашла у Вас посылку с таким именем.',
                 tts: 'Я не нашла у Вас посылку с таким именем.',
+                buttons: [{
+                  title: 'Отследить другую посылку',
+                  payload: {
+                    type: 0,
+                  },
+                },
+                ],
                 end_session: true,
               },
               ...static_required_data,
@@ -306,6 +342,13 @@ router.post('/webhook', async (req, res) => {
             response: {
               text: 'Трек-код не действителен.',
               tts: 'Трек-код не действителен.',
+              buttons: [{
+                title: 'Отследить другую посылку',
+                payload: {
+                  type: 0,
+                },
+              },
+              ],
               end_session: true,
             },
             ...static_required_data,
@@ -319,6 +362,13 @@ router.post('/webhook', async (req, res) => {
             response: {
               text: 'Я буду внимательно следить за перемещением посылки, а пока что стоит подождать, пока появятся первые данные о перемещении.',
               tts: 'Я буду внимательно следить за перемещением посылки, а пока что стоит подождать, пока появятся первые данные о перемещении.',
+              buttons: [{
+                title: 'Отследить другую посылку',
+                payload: {
+                  type: 0,
+                },
+              },
+              ],
               end_session: true,
             },
             ...static_required_data,
@@ -447,7 +497,6 @@ router.post('/webhook', async (req, res) => {
               notification: true,
             },
           });
-          console.log(el.packageNumber.toUpperCase());
 
           res.send({
             response: {
@@ -475,6 +524,7 @@ router.post('/webhook', async (req, res) => {
         });
       }
     } else if (session_payload.act === Activities.NOTIFICATION_ACCEPT) {
+      console.log(request.command);
       if (request.command === 'верно') {
         const { userId } = session.user;
         await Package.updateOne({
@@ -500,7 +550,7 @@ router.post('/webhook', async (req, res) => {
         });
 
         delete sessions[session_id];
-      } else if (request.command === 'отмена') {
+      } else if (request.command === 'отмена' || request.command === 'on_interrupt') {
         res.send({
           response: {
             text: 'Если что, возвращайтесь! Помогу отследить посылку.',
@@ -566,7 +616,6 @@ router.post('/webhook', async (req, res) => {
       const newName = {
         newPackageName: request.original_utterance.trim(),
       };
-      console.log(newName, session_payload.trackNumber);
       await changePackageName(userId, session_payload.trackNumber, newName);
 
       res.send({
