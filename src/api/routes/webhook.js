@@ -52,7 +52,7 @@ const Activities = {
       || contains(tokens, ['редактир', 'назван', 'посыл']) === THREE_WORDS
       || contains(tokens, ['переимен', 'назван', 'посыл']) === THREE_WORDS
       || contains(tokens, ['переимен', 'посыл']) === TWO_WORDS,
-  RENAME_INPUT: 6,
+  RENAME_INPUT: 7,
 };
 
 router.post('/webhook', async (req, res) => {
