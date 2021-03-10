@@ -60,7 +60,7 @@ router.post('/webhook', async (req, res) => {
     session,
     version,
   } = body;
-  session.user = { userId: 245481845 }; // удалить это на проде
+  session.user = { userId: 123456789 }; // удалить это на проде
 
   const { session_id } = session;
   const static_required_data = {
@@ -249,6 +249,10 @@ router.post('/webhook', async (req, res) => {
         let flag = true;
 
         if (packageData === null) {
+          packageData = await addPackage(userId, { packageNumber: request.command.toUpperCase() });
+        }
+
+        if (packageData === null) {
           packageDataWithName.forEach((el) => {
             if (el.packageName !== null && el.packageName !== undefined && el.packageName.toUpperCase() === request.original_utterance.toUpperCase()) {
               const packageEventsLength = el.events.length;
@@ -292,9 +296,7 @@ router.post('/webhook', async (req, res) => {
           }
         }
 
-        if (packageData === null) {
-          packageData = await addPackage(userId, { packageNumber: request.command.toUpperCase() });
-        }
+
 
         if (packageData.status === 'error') {
           res.send({

@@ -80,7 +80,7 @@ const job = new CronJob('0 0 11 * * *', () => {
   logger.info('Update started');
 });
 
-job.start();
+// job.start();
 
 module.exports = {
   updateHistoryData,
