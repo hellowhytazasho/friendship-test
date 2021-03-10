@@ -249,10 +249,14 @@ router.post('/webhook', async (req, res) => {
         let flag = true;
 
         if (packageData === null) {
-          packageData = await addPackage(userId, { packageNumber: request.command.toUpperCase() });
+          try {
+            packageData = await addPackage(userId, { packageNumber: request.command.toUpperCase() });
+          } catch (error) {
+            console.log('err');
+          }
         }
 
-        if (packageData === null) {
+        if (!packageData) {
           packageDataWithName.forEach((el) => {
             if (el.packageName !== null && el.packageName !== undefined && el.packageName.toUpperCase() === request.original_utterance.toUpperCase()) {
               const packageEventsLength = el.events.length;
@@ -295,8 +299,6 @@ router.post('/webhook', async (req, res) => {
             return;
           }
         }
-
-
 
         if (packageData.status === 'error') {
           res.send({
