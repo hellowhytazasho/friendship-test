@@ -134,160 +134,9 @@ router.post('/webhook', async (req, res) => {
     version,
   };
   const session_payload = sessions[session_id];
-
   tokens = request.nlu.tokens;
 
-  if (session.user === undefined) {
-    res.send({
-      response: {
-        text: 'Я могу помочь с отслеживанием посылки — переходите в мини-приложение!',
-        tts: 'Я могу помочь с отслеживанием посылки — переходите в мини-приложение!',
-        card: {
-          type: 'MiniApp',
-          url: 'https://vk.com/track',
-        },
-        end_session: false,
-      },
-      ...static_required_data,
-    });
-  } else if (Activities.isTrack()) {
-    res.send({
-      response: {
-        text: 'Чтобы отследить посылку, введите трек-номер или название посылки.',
-        tts: 'Чтобы отследить посылку, введите трек-номер или название посылки.',
-        end_session: false,
-      },
-      ...static_required_data,
-    });
-    sessions[session_id] = {
-      act: Activities.TRACK,
-    };
-    return;
-  } else if (Activities.isTransit()) {
-    const { user_id } = session.user;
-    const userPackages = await Package.find({ userId: user_id, deliveredStatus: 0 });
-    if (userPackages.length) {
-      let message = 'У Вас в пути';
-      const packegeWithName = [];
-
-      if (userPackages.length >= PACKAGE_LENGTH) {
-        userPackages.forEach((el) => {
-          if (el.packageName !== null && el.packageName !== undefined) packegeWithName.push(el);
-        });
-
-        if (packegeWithName.length >= PACKAGE_LENGTH) {
-          for (let i = 0; i < PACKAGE_LENGTH; i += 1) {
-            if (i !== 2) {
-              message += ` ${packegeWithName[i].packageName},`;
-            } else {
-              const remainPack = userPackages.length - PACKAGE_LENGTH;
-              let lastWord;
-              if (remainPack === 1) {
-                lastWord = remainPack === 1 ? 'посылка' : 'посылки';
-              } else if (remainPack < 5 && remainPack > 1) {
-                lastWord = 'посылки';
-              } else {
-                lastWord = 'посылок';
-              }
-              message += ` ${packegeWithName[i].packageName} и еще ${remainPack} ${lastWord}.`;
-            }
-          }
-        } else {
-          const lastWord = userPackages.length < 5 && userPackages.length > 1 ? 'посылки' : 'посылок';
-          message += ` ${userPackages.length} ${lastWord}.`;
-        }
-      } else if (userPackages.length === 1) {
-        message += ' 1 посылка';
-      } else {
-        message += ` ${userPackages.length} ${userPackages.length < 5 && userPackages.length > 1 ? 'посылки' : 'посылок'}.`;
-      }
-      res.send({
-        response: {
-          text: message,
-          tts: message,
-          buttons: [{
-            title: 'Отследить посылку',
-            payload: {
-              type: 0,
-            },
-          },
-          ],
-          card: {
-            type: 'MiniApp',
-            url: 'https://vk.com/track',
-          },
-          end_session: false,
-        },
-        ...static_required_data,
-      });
-    } else {
-      res.send({
-        response: {
-          text: 'У Вас нет активных посылок.',
-          tts: 'У Вас нет активных посылок.',
-          buttons: [{
-            title: 'Отследить другую посылку',
-            payload: {
-              type: 0,
-            },
-          },
-          ],
-          end_session: false,
-        },
-        ...static_required_data,
-      });
-    }
-    delete sessions[session_id];
-    return;
-  } else if (Activities.isNotification()) {
-    res.send({
-      response: {
-        text: 'Вам нужны уведомления о всех посылках, или о конкретной?',
-        tts: 'Вам нужны уведомления о всех посылках, или о конкретной?',
-        end_session: false,
-        buttons: [{
-          title: 'Обо всех',
-          payload: {
-            type: 0,
-          },
-        },
-        {
-          title: 'О конкретной',
-          payload: {
-            type: 1,
-          },
-        },
-        ],
-      },
-      ...static_required_data,
-    });
-    sessions[session_id] = {
-      act: Activities.NOTIFICATION,
-    };
-    return;
-  } else if (Activities.isRename()) {
-    res.send({
-      response: {
-        text: 'Введите название посылки, или её трек-номер.',
-        tts: 'Введите название посылки, или её трек-номер.',
-        end_session: false,
-      },
-      ...static_required_data,
-    });
-    sessions[session_id] = {
-      act: Activities.RENAME,
-    };
-    return;
-  } else if (Activities.isHelp()) {
-    res.send({
-      response: {
-        text: 'Я могу Вам помочь отследить посылку. Благодаря мне Вы можете переименовывать свои посылки, и получать уведомления о них.',
-        tts: 'Я могу Вам помочь отследить посылку. Благодаря мне Вы можете переименовывать свои посылки, и получать уведомления о них.',
-        end_session: false,
-      },
-      ...static_required_data,
-    });
-  } else if (Activities.isFirstWrite()) {
+  if (Activities.isFirstWrite()) {
     res.send({
       response: {
         text: 'Я могу Вам помочь отследить посылку.\n\nДля отслеживания посылки скажите «Отследить посылку», для переименования посылки, и включения уведомлений о посылках соответственные фразы.',
@@ -296,15 +145,174 @@ router.post('/webhook', async (req, res) => {
       },
       ...static_required_data,
     });
-  } else if (Activities.isStop()) {
-    res.send({
-      response: {
-        text: 'Всего доброго! Возвращайтесь ещё.',
-        tts: 'Всего доброго! Возвращайтесь ещё.',
-        end_session: true,
-      },
-      ...static_required_data,
-    });
+    sessions[session_id] = {
+      skillStarted: true,
+    };
+    return;
+  }
+
+  if (session_payload.skillStarted) {
+    if (session.user === undefined) {
+      res.send({
+        response: {
+          text: 'Я могу помочь с отслеживанием посылки — переходите в мини-приложение!',
+          tts: 'Я могу помочь с отслеживанием посылки — переходите в мини-приложение!',
+          card: {
+            type: 'MiniApp',
+            url: 'https://vk.com/track',
+          },
+          end_session: false,
+        },
+        ...static_required_data,
+      });
+    } else if (Activities.isTrack()) {
+      res.send({
+        response: {
+          text: 'Чтобы отследить посылку, введите трек-номер или название посылки.',
+          tts: 'Чтобы отследить посылку, введите трек-номер или название посылки.',
+          end_session: false,
+        },
+        ...static_required_data,
+      });
+      sessions[session_id] = {
+        act: Activities.TRACK,
+      };
+      return;
+    } else if (Activities.isTransit()) {
+      const { user_id } = session.user;
+      const userPackages = await Package.find({ userId: user_id, deliveredStatus: 0 });
+      if (userPackages.length) {
+        let message = 'У Вас в пути';
+        const packegeWithName = [];
+
+        if (userPackages.length >= PACKAGE_LENGTH) {
+          userPackages.forEach((el) => {
+            if (el.packageName !== null && el.packageName !== undefined) packegeWithName.push(el);
+          });
+
+          if (packegeWithName.length >= PACKAGE_LENGTH) {
+            for (let i = 0; i < PACKAGE_LENGTH; i += 1) {
+              if (i !== 2) {
+                message += ` ${packegeWithName[i].packageName},`;
+              } else {
+                const remainPack = userPackages.length - PACKAGE_LENGTH;
+                let lastWord;
+                if (remainPack === 1) {
+                  lastWord = remainPack === 1 ? 'посылка' : 'посылки';
+                } else if (remainPack < 5 && remainPack > 1) {
+                  lastWord = 'посылки';
+                } else {
+                  lastWord = 'посылок';
+                }
+                message += ` ${packegeWithName[i].packageName} и еще ${remainPack} ${lastWord}.`;
+              }
+            }
+          } else {
+            const lastWord = userPackages.length < 5 && userPackages.length > 1 ? 'посылки' : 'посылок';
+            message += ` ${userPackages.length} ${lastWord}.`;
+          }
+        } else if (userPackages.length === 1) {
+          message += ' 1 посылка';
+        } else {
+          message += ` ${userPackages.length} ${userPackages.length < 5 && userPackages.length > 1 ? 'посылки' : 'посылок'}.`;
+        }
+        res.send({
+          response: {
+            text: message,
+            tts: message,
+            buttons: [{
+              title: 'Отследить посылку',
+              payload: {
+                type: 0,
+              },
+            },
+            ],
+            card: {
+              type: 'MiniApp',
+              url: 'https://vk.com/track',
+            },
+            end_session: false,
+          },
+          ...static_required_data,
+        });
+      } else {
+        res.send({
+          response: {
+            text: 'У Вас нет активных посылок.',
+            tts: 'У Вас нет активных посылок.',
+            buttons: [{
+              title: 'Отследить другую посылку',
+              payload: {
+                type: 0,
+              },
+            },
+            ],
+            end_session: false,
+          },
+          ...static_required_data,
+        });
+      }
+      delete sessions[session_id];
+      return;
+    } else if (Activities.isNotification()) {
+      res.send({
+        response: {
+          text: 'Вам нужны уведомления о всех посылках, или о конкретной?',
+          tts: 'Вам нужны уведомления о всех посылках, или о конкретной?',
+          end_session: false,
+          buttons: [{
+            title: 'Обо всех',
+            payload: {
+              type: 0,
+            },
+          },
+          {
+            title: 'О конкретной',
+            payload: {
+              type: 1,
+            },
+          },
+          ],
+        },
+        ...static_required_data,
+      });
+      sessions[session_id] = {
+        act: Activities.NOTIFICATION,
+      };
+      return;
+    } else if (Activities.isRename()) {
+      res.send({
+        response: {
+          text: 'Введите название посылки, или её трек-номер.',
+          tts: 'Введите название посылки, или её трек-номер.',
+          end_session: false,
+        },
+        ...static_required_data,
+      });
+      sessions[session_id] = {
+        act: Activities.RENAME,
+      };
+      return;
+    } else if (Activities.isHelp()) {
+      res.send({
+        response: {
+          text: 'Я могу Вам помочь отследить посылку. Благодаря мне Вы можете переименовывать свои посылки, и получать уведомления о них.',
+          tts: 'Я могу Вам помочь отследить посылку. Благодаря мне Вы можете переименовывать свои посылки, и получать уведомления о них.',
+          end_session: false,
+        },
+        ...static_required_data,
+      });
+    } else if (Activities.isStop()) {
+      res.send({
+        response: {
+          text: 'Всего доброго! Возвращайтесь ещё.',
+          tts: 'Всего доброго! Возвращайтесь ещё.',
+          end_session: true,
+        },
+        ...static_required_data,
+      });
+      delete sessions[session_id];
+    }
   }
 
   if (session_payload) {
@@ -490,8 +498,6 @@ router.post('/webhook', async (req, res) => {
           ...static_required_data,
         });
 
-        delete sessions[session_id];
-      } else {
         delete sessions[session_id];
       }
     } else if (session_payload.act === Activities.NOTIFICATION) {
