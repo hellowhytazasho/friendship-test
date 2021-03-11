@@ -114,7 +114,7 @@ const Activities = {
       || contains(tokens, ['переимен', 'назван', 'посыл']) === THREE_WORDS
       || contains(tokens, ['переимен', 'посыл']) === TWO_WORDS,
   RENAME_INPUT: 7,
-  isStop: () => contains(tokens, ['отмена', 'стоп']) === 1,
+  isStop: () => contains(tokens, ['отмена', 'стоп', 'пока']) === 1,
 };
 
 router.post('/webhook', async (req, res) => {
@@ -151,6 +151,7 @@ router.post('/webhook', async (req, res) => {
     return;
   }
 
+  console.log(session_payload, request.command)
   if (session_payload.skillStarted) {
     if (session.user === undefined) {
       res.send({
@@ -175,7 +176,7 @@ router.post('/webhook', async (req, res) => {
         ...static_required_data,
       });
       sessions[session_id] = {
-        act: Activities.TRACK,
+        act: Activities.TRACK, skillStarted: true,
       };
       return;
     } else if (Activities.isTransit()) {
@@ -252,7 +253,6 @@ router.post('/webhook', async (req, res) => {
           ...static_required_data,
         });
       }
-      delete sessions[session_id];
       return;
     } else if (Activities.isNotification()) {
       res.send({
@@ -277,7 +277,7 @@ router.post('/webhook', async (req, res) => {
         ...static_required_data,
       });
       sessions[session_id] = {
-        act: Activities.NOTIFICATION,
+        act: Activities.NOTIFICATION, skillStarted: true,
       };
       return;
     } else if (Activities.isRename()) {
@@ -290,7 +290,7 @@ router.post('/webhook', async (req, res) => {
         ...static_required_data,
       });
       sessions[session_id] = {
-        act: Activities.RENAME,
+        act: Activities.RENAME, skillStarted: true,
       };
       return;
     } else if (Activities.isHelp()) {
@@ -370,7 +370,7 @@ router.post('/webhook', async (req, res) => {
                 ...static_required_data,
               });
               sessions[session_id] = {
-                act: Activities.DETAIL, trackNumber: el.packageNumber.toUpperCase(),
+                act: Activities.DETAIL, trackNumber: el.packageNumber.toUpperCase(), skillStarted: true,
               };
             }
           });
@@ -390,7 +390,7 @@ router.post('/webhook', async (req, res) => {
               },
               ...static_required_data,
             });
-            delete sessions[session_id];
+            delete sessions[session_id].act;
             return;
           }
           if (!flag) {
@@ -415,7 +415,7 @@ router.post('/webhook', async (req, res) => {
             },
             ...static_required_data,
           });
-          delete sessions[session_id];
+          delete sessions[session_id].act;
           return;
         }
 
@@ -435,7 +435,7 @@ router.post('/webhook', async (req, res) => {
             },
             ...static_required_data,
           });
-          delete sessions[session_id];
+          delete sessions[session_id].act;
           return;
         }
 
@@ -458,7 +458,7 @@ router.post('/webhook', async (req, res) => {
           ...static_required_data,
         });
         sessions[session_id] = {
-          act: Activities.DETAIL, trackNumber: request.command.toUpperCase(),
+          act: Activities.DETAIL, trackNumber: request.command.toUpperCase(), skillStarted: true,
         };
       }
     } else if (session_payload.act === Activities.DETAIL) {
@@ -498,7 +498,7 @@ router.post('/webhook', async (req, res) => {
           ...static_required_data,
         });
 
-        delete sessions[session_id];
+        delete sessions[session_id].act;
       }
     } else if (session_payload.act === Activities.NOTIFICATION) {
       const { user_id } = session.user;
@@ -527,7 +527,7 @@ router.post('/webhook', async (req, res) => {
             ...static_required_data,
           });
 
-          delete sessions[session_id];
+          delete sessions[session_id].act;
         } else {
           res.send({
             response: {
@@ -538,7 +538,7 @@ router.post('/webhook', async (req, res) => {
             ...static_required_data,
           });
 
-          delete sessions[session_id];
+          delete sessions[session_id].act;
         }
       } else if (request.command === 'о конкретной') {
         res.send({
@@ -550,7 +550,7 @@ router.post('/webhook', async (req, res) => {
           ...static_required_data,
         });
 
-        sessions[session_id] = { act: Activities.NOTIFICATION_INPUT_TRACK };
+        sessions[session_id] = { act: Activities.NOTIFICATION_INPUT_TRACK, skillStarted: true, };
       }
     } else if (session_payload.act === Activities.NOTIFICATION_INPUT_TRACK) {
       const { user_id } = session.user;
@@ -584,7 +584,7 @@ router.post('/webhook', async (req, res) => {
           });
 
           sessions[session_id] = {
-            act: Activities.NOTIFICATION_ACCEPT, trackNumber: el.packageNumber,
+            act: Activities.NOTIFICATION_ACCEPT, trackNumber: el.packageNumber, skillStarted: true,
           };
         }
         if (el.packageNumber.toUpperCase() === request.original_utterance.toUpperCase()) {
@@ -611,7 +611,7 @@ router.post('/webhook', async (req, res) => {
             },
             ...static_required_data,
           });
-          delete sessions[session_id];
+          delete sessions[session_id].act;
         }
       });
       if (flag) {
@@ -650,7 +650,7 @@ router.post('/webhook', async (req, res) => {
           ...static_required_data,
         });
 
-        delete sessions[session_id];
+        delete sessions[session_id].act;
       } else if (request.command === 'отмена' || request.command === 'on_interrupt') {
         res.send({
           response: {
@@ -661,7 +661,7 @@ router.post('/webhook', async (req, res) => {
           ...static_required_data,
         });
 
-        delete sessions[session_id];
+        delete sessions[session_id].act;
       }
       // eslint-disable-next-line no-useless-return
       return;
@@ -682,7 +682,7 @@ router.post('/webhook', async (req, res) => {
           });
 
           sessions[session_id] = {
-            act: Activities.RENAME_INPUT, trackNumber: el.packageNumber.toUpperCase(),
+            act: Activities.RENAME_INPUT, trackNumber: el.packageNumber.toUpperCase(), skillStarted: true,
           };
           flag = false;
         }
@@ -697,7 +697,7 @@ router.post('/webhook', async (req, res) => {
           });
 
           sessions[session_id] = {
-            act: Activities.RENAME_INPUT, trackNumber: el.packageNumber.toUpperCase(),
+            act: Activities.RENAME_INPUT, trackNumber: el.packageNumber.toUpperCase(), skillStarted: true,
           };
           flag = false;
         }
@@ -728,7 +728,7 @@ router.post('/webhook', async (req, res) => {
         ...static_required_data,
       });
 
-      delete sessions[session_id];
+      delete sessions[session_id].act;
     }
   }
 });
