@@ -32,10 +32,10 @@ function contains(array, find) {
 
 const Activities = {
   isHelp: () => contains(tokens, ['помощь', 'хэлп', 'help', 'старт', 'start', 'команды', 'test', 'тест']) === 1,
+  isFirstWrite: () => contains(tokens, ['где', 'моя', 'посыл']) === THREE_WORDS,
   TRACK: 0,
   isTrack: () => contains(tokens, ['отследи', 'посыл']) === TWO_WORDS
       || contains(tokens, ['определ', 'посыл']) === TWO_WORDS
-      || contains(tokens, ['где', 'посыл']) === TWO_WORDS
       || contains(tokens, ['отслед', 'друг', 'посыл']) === TWO_WORDS,
   TRANSIT: 1,
   DETAIL: 6,
@@ -54,6 +54,7 @@ const Activities = {
       || contains(tokens, ['переимен', 'назван', 'посыл']) === THREE_WORDS
       || contains(tokens, ['переимен', 'посыл']) === TWO_WORDS,
   RENAME_INPUT: 7,
+  isStop: () => contains(tokens, ['отмена', 'стоп']) === 1,
 };
 
 router.post('/webhook', async (req, res) => {
@@ -83,7 +84,7 @@ router.post('/webhook', async (req, res) => {
           type: 'MiniApp',
           url: 'https://vk.com/track',
         },
-        end_session: true,
+        end_session: false,
       },
       ...static_required_data,
     });
@@ -169,7 +170,7 @@ router.post('/webhook', async (req, res) => {
             },
           },
           ],
-          end_session: true,
+          end_session: false,
         },
         ...static_required_data,
       });
@@ -220,6 +221,24 @@ router.post('/webhook', async (req, res) => {
       response: {
         text: 'Я могу Вам помочь отследить посылку. Благодаря мне Вы можете переименовывать свои посылки, и получать уведомления о них.',
         tts: 'Я могу Вам помочь отследить посылку. Благодаря мне Вы можете переименовывать свои посылки, и получать уведомления о них.',
+        end_session: false,
+      },
+      ...static_required_data,
+    });
+  } else if (Activities.isFirstWrite()) {
+    res.send({
+      response: {
+        text: 'Я могу Вам помочь отследить посылку.\n\nДля отслеживания посылки скажите «Отследить посылку», для переименования посылки, и включения уведомлений о посылках соответственные фразы.',
+        tts: 'Я могу Вам помочь отследить посылку.\n\nДля отслеживания посылки скажите «Отследить посылку», для переименования посылки, и включения уведомлений о посылках соответственные фразы.',
+        end_session: false,
+      },
+      ...static_required_data,
+    });
+  } else if (Activities.isStop()) {
+    res.send({
+      response: {
+        text: 'Всего доброго! Возвращайтесь ещё.',
+        tts: 'Всего доброго! Возвращайтесь ещё.',
         end_session: true,
       },
       ...static_required_data,
@@ -240,7 +259,7 @@ router.post('/webhook', async (req, res) => {
               },
             },
             ],
-            end_session: true,
+            end_session: false,
           },
           ...static_required_data,
         });
@@ -297,7 +316,7 @@ router.post('/webhook', async (req, res) => {
                   },
                 },
                 ],
-                end_session: true,
+                end_session: false,
               },
               ...static_required_data,
             });
@@ -322,7 +341,7 @@ router.post('/webhook', async (req, res) => {
                 },
               },
               ],
-              end_session: true,
+              end_session: false,
             },
             ...static_required_data,
           });
@@ -342,7 +361,7 @@ router.post('/webhook', async (req, res) => {
                 },
               },
               ],
-              end_session: true,
+              end_session: false,
             },
             ...static_required_data,
           });
@@ -404,7 +423,7 @@ router.post('/webhook', async (req, res) => {
               },
             },
             ],
-            end_session: true,
+            end_session: false,
           },
           ...static_required_data,
         });
@@ -423,7 +442,7 @@ router.post('/webhook', async (req, res) => {
             userId: user_id,
           }, {
             $set: {
-              notification: true,
+              notification: false,
             },
           });
 
@@ -435,7 +454,7 @@ router.post('/webhook', async (req, res) => {
                 type: 'MiniApp',
                 url: 'https://vk.com/track',
               },
-              end_session: true,
+              end_session: false,
             },
             ...static_required_data,
           });
@@ -446,7 +465,7 @@ router.post('/webhook', async (req, res) => {
             response: {
               text: 'У Вас нет посылок.',
               tts: 'У Вас нет посылок.',
-              end_session: true,
+              end_session: false,
             },
             ...static_required_data,
           });
@@ -520,7 +539,7 @@ router.post('/webhook', async (req, res) => {
                 type: 'MiniApp',
                 url: 'https://vk.com/track',
               },
-              end_session: true,
+              end_session: false,
             },
             ...static_required_data,
           });
@@ -532,7 +551,7 @@ router.post('/webhook', async (req, res) => {
           response: {
             text: 'Я не нашла у Вас такой посылки.',
             tts: 'Я не нашла у Вас такой посылки.',
-            end_session: true,
+            end_session: false,
           },
           ...static_required_data,
         });
@@ -558,7 +577,7 @@ router.post('/webhook', async (req, res) => {
               type: 'MiniApp',
               url: 'https://vk.com/track',
             },
-            end_session: true,
+            end_session: false,
           },
           ...static_required_data,
         });
@@ -569,7 +588,7 @@ router.post('/webhook', async (req, res) => {
           response: {
             text: 'Если что, возвращайтесь! Помогу отследить посылку.',
             tts: 'Если что, возвращайтесь! Помогу отследить посылку.',
-            end_session: true,
+            end_session: false,
           },
           ...static_required_data,
         });
@@ -620,7 +639,7 @@ router.post('/webhook', async (req, res) => {
           response: {
             text: 'Я не нашла у Вас такой посылки.',
             tts: 'Я не нашла у Вас такой посылки.',
-            end_session: true,
+            end_session: false,
           },
           ...static_required_data,
         });
@@ -636,7 +655,7 @@ router.post('/webhook', async (req, res) => {
         response: {
           text: 'Название посылки сохранено.',
           tts: 'Название посылки сохранено.',
-          end_session: true,
+          end_session: false,
         },
         ...static_required_data,
       });
