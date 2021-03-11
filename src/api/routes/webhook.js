@@ -7,6 +7,7 @@
 const { Router } = require('express');
 const { addPackage, changePackageName } = require('../../services/packages.service');
 const { Package } = require('../../model/package');
+const logger = require('../../logger')('webhook');
 
 const router = Router();
 
@@ -64,6 +65,8 @@ router.post('/webhook', async (req, res) => {
     session,
     version,
   } = body;
+  logger.info(body);
+
   session.user = { user_id: 123456789 }; // удалить это на проде
 
   const { session_id } = session;
