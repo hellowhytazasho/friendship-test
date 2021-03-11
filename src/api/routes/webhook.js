@@ -31,6 +31,7 @@ function contains(array, find) {
 }
 
 const Activities = {
+  isHelp: () => contains(tokens, ['помощь', 'хэлп', 'help', 'старт', 'start', 'команды', 'test', 'тест']) === 1,
   TRACK: 0,
   isTrack: () => contains(tokens, ['отследи', 'посыл']) === TWO_WORDS
       || contains(tokens, ['определ', 'посыл']) === TWO_WORDS
@@ -214,6 +215,15 @@ router.post('/webhook', async (req, res) => {
       act: Activities.RENAME,
     };
     return;
+  } else if (Activities.isHelp()) {
+    res.send({
+      response: {
+        text: 'Я могу Вам помочь отследить посылку. Благодаря мне Вы можете переименовывать свои посылки, и получать уведомления о них.',
+        tts: 'Я могу Вам помочь отследить посылку. Благодаря мне Вы можете переименовывать свои посылки, и получать уведомления о них.',
+        end_session: true,
+      },
+      ...static_required_data,
+    });
   }
 
   if (session_payload) {
