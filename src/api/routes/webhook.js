@@ -33,7 +33,66 @@ function contains(array, find) {
 
 const Activities = {
   isHelp: () => contains(tokens, ['помощь', 'хэлп', 'help', 'старт', 'start', 'команды', 'test', 'тест']) === 1,
-  isFirstWrite: () => contains(tokens, ['где', 'моя', 'посыл']) === THREE_WORDS,
+  isFirstWrite: () => contains(tokens, ['где', 'моя', 'посыл']) === THREE_WORDS
+  || contains(tokens, ['запусти', 'скилл', 'посылки']) === THREE_WORDS
+  || contains(tokens, ['запусти', 'скилл', 'трекер', 'посылок']) === FOUR_WORDS
+  || contains(tokens, ['запусти', 'скилл', 'отслеживание', 'посылок']) === FOUR_WORDS
+  || contains(tokens, ['запусти', 'скилл', 'tracker', 'посылок']) === FOUR_WORDS
+  // ---------------------------------------------------------------------------------
+  || contains(tokens, ['открой', 'скилл', 'посылки']) === THREE_WORDS
+  || contains(tokens, ['открой', 'скилл', 'трекер', 'посылок']) === FOUR_WORDS
+  || contains(tokens, ['открой', 'скилл', 'отслеживание', 'посылок']) === FOUR_WORDS
+  || contains(tokens, ['открой', 'скилл', 'tracker', 'посылок']) === FOUR_WORDS
+  // ---------------------------------------------------------------------------------
+  || contains(tokens, ['включи', 'скилл', 'посылки']) === THREE_WORDS
+  || contains(tokens, ['включи', 'скилл', 'трекер', 'посылок']) === FOUR_WORDS
+  || contains(tokens, ['включи', 'скилл', 'отслеживание', 'посылок']) === FOUR_WORDS
+  || contains(tokens, ['включи', 'скилл', 'tracker', 'посылок']) === FOUR_WORDS
+  // ---------------------------------------------------------------------------------
+  || contains(tokens, ['хочу', 'скилл', 'посылки']) === THREE_WORDS
+  || contains(tokens, ['хочу', 'скилл', 'трекер', 'посылок']) === FOUR_WORDS
+  || contains(tokens, ['хочу', 'скилл', 'отслеживание', 'посылок']) === FOUR_WORDS
+  || contains(tokens, ['хочу', 'скилл', 'tracker', 'посылок']) === FOUR_WORDS
+  // ---------------------------------------------------------------------------------
+  || contains(tokens, ['запусти', 'skill', 'посылки']) === THREE_WORDS
+  || contains(tokens, ['запусти', 'skill', 'трекер', 'посылок']) === FOUR_WORDS
+  || contains(tokens, ['запусти', 'skill', 'отслеживание', 'посылок']) === FOUR_WORDS
+  || contains(tokens, ['запусти', 'skill', 'tracker', 'посылок']) === FOUR_WORDS
+
+  || contains(tokens, ['открой', 'skill', 'посылки']) === THREE_WORDS
+  || contains(tokens, ['открой', 'skill', 'трекер', 'посылок']) === FOUR_WORDS
+  || contains(tokens, ['открой', 'skill', 'отслеживание', 'посылок']) === FOUR_WORDS
+  || contains(tokens, ['открой', 'skill', 'tracker', 'посылок']) === FOUR_WORDS
+
+  || contains(tokens, ['включи', 'skill', 'посылки']) === THREE_WORDS
+  || contains(tokens, ['включи', 'skill', 'трекер', 'посылок']) === FOUR_WORDS
+  || contains(tokens, ['включи', 'skill', 'отслеживание', 'посылок']) === FOUR_WORDS
+  || contains(tokens, ['включи', 'skill', 'tracker', 'посылок']) === FOUR_WORDS
+
+  || contains(tokens, ['хочу', 'skill', 'посылки']) === THREE_WORDS
+  || contains(tokens, ['хочу', 'skill', 'трекер', 'посылок']) === FOUR_WORDS
+  || contains(tokens, ['хочу', 'skill', 'отслеживание', 'посылок']) === FOUR_WORDS
+  || contains(tokens, ['хочу', 'skill', 'tracker', 'посылок']) === FOUR_WORDS
+  // ---------------------------------------------------------------------------------
+  || contains(tokens, ['запусти', 'навык', 'посылки']) === THREE_WORDS
+  || contains(tokens, ['запусти', 'навык', 'трекер', 'посылок']) === FOUR_WORDS
+  || contains(tokens, ['запусти', 'навык', 'отслеживание', 'посылок']) === FOUR_WORDS
+  || contains(tokens, ['запусти', 'навык', 'tracker', 'посылок']) === FOUR_WORDS
+  // ---------------------------------------------------------------------------------
+  || contains(tokens, ['открой', 'навык', 'посылки']) === THREE_WORDS
+  || contains(tokens, ['открой', 'навык', 'трекер', 'посылок']) === FOUR_WORDS
+  || contains(tokens, ['открой', 'навык', 'отслеживание', 'посылок']) === FOUR_WORDS
+  || contains(tokens, ['открой', 'навык', 'tracker', 'посылок']) === FOUR_WORDS
+  // ---------------------------------------------------------------------------------
+  || contains(tokens, ['включи', 'навык', 'посылки']) === THREE_WORDS
+  || contains(tokens, ['включи', 'навык', 'трекер', 'посылок']) === FOUR_WORDS
+  || contains(tokens, ['включи', 'навык', 'отслеживание', 'посылок']) === FOUR_WORDS
+  || contains(tokens, ['включи', 'навык', 'tracker', 'посылок']) === FOUR_WORDS
+  // ---------------------------------------------------------------------------------
+  || contains(tokens, ['хочу', 'навык', 'посылки']) === THREE_WORDS
+  || contains(tokens, ['хочу', 'навык', 'трекер', 'посылок']) === FOUR_WORDS
+  || contains(tokens, ['хочу', 'навык', 'отслеживание', 'посылок']) === FOUR_WORDS
+  || contains(tokens, ['хочу', 'навык', 'tracker', 'посылок']) === FOUR_WORDS,
   TRACK: 0,
   isTrack: () => contains(tokens, ['отследи', 'посыл']) === TWO_WORDS
       || contains(tokens, ['определ', 'посыл']) === TWO_WORDS
