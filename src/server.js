@@ -1,4 +1,5 @@
 require('./db');
+require('./helpers/ping-app');
 const app = require('./api');
 const logger = require('./logger')('server');
 
