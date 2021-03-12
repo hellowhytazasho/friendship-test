@@ -302,7 +302,7 @@ router.post('/webhook', async (req, res) => {
         },
         ...static_required_data,
       });
-    } else if (Activities.isStop()) {
+    } else if (Activities.isStop() || request.command === 'on_interrupt') {
       res.send({
         response: {
           text: 'Всего доброго! Возвращайтесь ещё.',
