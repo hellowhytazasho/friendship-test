@@ -18,6 +18,47 @@ const PACKAGE_LENGTH = 3;
 const BAD_PACKAGE_NUMBER_LENGTH = 4;
 const TWO_ELEMENTS = 2;
 
+const HELLO_MESSAGE = {
+  text: 'Выберите что нужно сделать: отследить посылку, переименовать посылку, включить уведомление о посылке, посмотреть какие посылки в пути.',
+  tts: 'Выберите что нужно сделать: отследить посылку, переименовать посылку, включить уведомление о посылке, посмотреть какие посылки в пути.',
+  end_session: false,
+  buttons: [
+    {
+      title: 'Отследить посылку',
+      payload: { act: 'track' },
+    },
+    {
+      title: 'Переименовать посылку',
+      payload: { act: 'rename' },
+    },
+    {
+      title: 'Включить уведомления',
+      payload: { act: 'notify' },
+    },
+  ],
+};
+const BYE_MESSAGE = {
+  text: 'Хотите выйти из навыка?',
+  tts: 'Хотите выйти из навыка?',
+  end_session: false,
+  buttons: [
+    {
+      title: 'Да',
+      payload: { act: 'exit' },
+    },
+    {
+      title: 'Нет',
+      payload: { act: 'hello_msg' },
+    },
+  ],
+};
+
+const END_MESSAGE = {
+  text: 'Всего доброго! Возвращайтесь ещё.',
+  tts: 'Всего доброго! Возвращайтесь ещё.',
+  end_session: true,
+};
+
 let tokens = [];
 const sessions = {};
 
@@ -102,10 +143,12 @@ const Activities = {
   isTransit: () => contains(tokens, ['какие', 'посыл', 'не', 'достав']) === FOUR_WORDS
       || contains(tokens, ['какие', 'посыл', 'недостав']) === THREE_WORDS
       || contains(tokens, ['какие', 'посыл', 'едут']) === THREE_WORDS
+      || contains(tokens, ['какие', 'посыл', 'в', 'пути']) === FOUR_WORDS
       || contains(tokens, ['сколько', 'посыл', 'в', 'пути']) === FOUR_WORDS,
   NOTIFICATION: 2,
   isNotification: () => contains(tokens, ['включ', 'уведом', 'о', 'посыл']) === FOUR_WORDS
-      || contains(tokens, ['уведом', 'о', 'посыл']) === THREE_WORDS,
+      || contains(tokens, ['уведом', 'о', 'посыл']) === THREE_WORDS
+      || contains(tokens, ['включ', 'уведом']) === TWO_WORDS,
   NOTIFICATION_INPUT_TRACK: 3,
   NOTIFICATION_ACCEPT: 4,
   RENAME: 5,
@@ -115,6 +158,7 @@ const Activities = {
       || contains(tokens, ['переимен', 'посыл']) === TWO_WORDS,
   RENAME_INPUT: 7,
   isStop: () => contains(tokens, ['отмена', 'стоп', 'пока']) === 1,
+  BYE: 8,
 };
 
 router.post('/webhook', async (req, res) => {
@@ -139,9 +183,7 @@ router.post('/webhook', async (req, res) => {
   if (Activities.isFirstWrite()) {
     res.send({
       response: {
-        text: 'Я могу Вам помочь отследить посылку.\n\nДля отслеживания посылки скажите «Отследить посылку», для переименования посылки, и включения уведомлений о посылках соответственные фразы.',
-        tts: 'Я могу Вам помочь отследить посылку.\n\nДля отслеживания посылки скажите «Отследить посылку», для переименования посылки, и включения уведомлений о посылках соответственные фразы.',
-        end_session: false,
+        ...HELLO_MESSAGE,
       },
       ...static_required_data,
     });
@@ -151,7 +193,7 @@ router.post('/webhook', async (req, res) => {
     return;
   }
 
-  console.log(session_payload, request.command)
+  console.log(session_payload, request.command);
   if (session_payload.skillStarted) {
     if (session.user === undefined) {
       res.send({
@@ -296,18 +338,17 @@ router.post('/webhook', async (req, res) => {
     } else if (Activities.isHelp()) {
       res.send({
         response: {
-          text: 'Я могу Вам помочь отследить посылку. Благодаря мне Вы можете переименовывать свои посылки, и получать уведомления о них.',
-          tts: 'Я могу Вам помочь отследить посылку. Благодаря мне Вы можете переименовывать свои посылки, и получать уведомления о них.',
-          end_session: false,
+          ...HELLO_MESSAGE,
         },
         ...static_required_data,
       });
+      sessions[session_id] = {
+        skillStarted: true,
+      };
     } else if (Activities.isStop() || request.command === 'on_interrupt') {
       res.send({
         response: {
-          text: 'Всего доброго! Возвращайтесь ещё.',
-          tts: 'Всего доброго! Возвращайтесь ещё.',
-          end_session: true,
+          ...END_MESSAGE,
         },
         ...static_required_data,
       });
@@ -356,13 +397,19 @@ router.post('/webhook', async (req, res) => {
               flag = false;
               res.send({
                 response: {
-                  text: `Последний статус: ${lastOperation}.`,
-                  tts: `Последний статус: ${lastOperation}.`,
+                  text: `Последний статус: ${lastOperation}. Хотите узнать подробнее?`,
+                  tts: `Последний статус: ${lastOperation}. Хотите узнать подробнее?`,
                   end_session: false,
                   buttons: [{
-                    title: 'Подробнее',
+                    title: 'Да',
                     payload: {
                       type: 0,
+                    },
+                  },
+                  {
+                    title: 'Нет',
+                    payload: {
+                      type: 1,
                     },
                   },
                   ],
@@ -444,13 +491,19 @@ router.post('/webhook', async (req, res) => {
 
         res.send({
           response: {
-            text: `Последний статус: ${lastOperation}.`,
-            tts: `Последний статус: ${lastOperation}.`,
+            text: `Последний статус: ${lastOperation}. Хотите узнать подробнее?`,
+            tts: `Последний статус: ${lastOperation}. Хотите узнать подробнее?`,
             end_session: false,
             buttons: [{
-              title: 'Подробнее',
+              title: 'Да',
               payload: {
                 type: 0,
+              },
+            },
+            {
+              title: 'Нет',
+              payload: {
+                type: 1,
               },
             },
             ],
@@ -462,7 +515,7 @@ router.post('/webhook', async (req, res) => {
         };
       }
     } else if (session_payload.act === Activities.DETAIL) {
-      if (request.command === 'подробнее') {
+      if (request.command === 'да') {
         const packageData = await await Package.findOne({ packageNumber: session_payload.trackNumber }).exec();
         const packageEventsLength = packageData.events.length;
         const { serviceName } = packageData.events[packageEventsLength - 1];
@@ -499,6 +552,15 @@ router.post('/webhook', async (req, res) => {
         });
 
         delete sessions[session_id].act;
+      } else {
+        res.send({
+          response: {
+            ...BYE_MESSAGE,
+          },
+          ...static_required_data,
+        });
+
+        sessions[session_id].act = Activities.BYE;
       }
     } else if (session_payload.act === Activities.NOTIFICATION) {
       const { user_id } = session.user;
@@ -531,14 +593,15 @@ router.post('/webhook', async (req, res) => {
         } else {
           res.send({
             response: {
-              text: 'У Вас нет посылок.',
-              tts: 'У Вас нет посылок.',
+              ...BYE_MESSAGE,
+              text: 'У Вас нет посылок. Хотите выйти из навыка?',
+              tts: 'У Вас нет посылок. Хотите выйти из навыка?',
               end_session: false,
             },
             ...static_required_data,
           });
 
-          delete sessions[session_id].act;
+          sessions[session_id].act = Activities.BYE;
         }
       } else if (request.command === 'о конкретной') {
         res.send({
@@ -550,7 +613,7 @@ router.post('/webhook', async (req, res) => {
           ...static_required_data,
         });
 
-        sessions[session_id] = { act: Activities.NOTIFICATION_INPUT_TRACK, skillStarted: true, };
+        sessions[session_id] = { act: Activities.NOTIFICATION_INPUT_TRACK, skillStarted: true };
       }
     } else if (session_payload.act === Activities.NOTIFICATION_INPUT_TRACK) {
       const { user_id } = session.user;
@@ -617,12 +680,15 @@ router.post('/webhook', async (req, res) => {
       if (flag) {
         res.send({
           response: {
-            text: 'Я не нашла у Вас такой посылки.',
-            tts: 'Я не нашла у Вас такой посылки.',
+            ...BYE_MESSAGE,
+            text: 'Я не нашла у Вас такой посылки. Хотите выйти из навыка?',
+            tts: 'Я не нашла у Вас такой посылки. Хотите выйти из навыка?',
             end_session: false,
           },
           ...static_required_data,
         });
+
+        sessions[session_id].act = Activities.BYE;
       }
     } else if (session_payload.act === Activities.NOTIFICATION_ACCEPT) {
       console.log(request.command);
@@ -654,9 +720,7 @@ router.post('/webhook', async (req, res) => {
       } else if (request.command === 'отмена' || request.command === 'on_interrupt') {
         res.send({
           response: {
-            text: 'Если что, возвращайтесь! Помогу отследить посылку.',
-            tts: 'Если что, возвращайтесь! Помогу отследить посылку.',
-            end_session: false,
+            ...END_MESSAGE,
           },
           ...static_required_data,
         });
@@ -705,12 +769,15 @@ router.post('/webhook', async (req, res) => {
       if (flag) {
         res.send({
           response: {
-            text: 'Я не нашла у Вас такой посылки.',
-            tts: 'Я не нашла у Вас такой посылки.',
+            ...BYE_MESSAGE,
+            text: 'Я не нашла у Вас такой посылки. Хотите выйти из навыка?',
+            tts: 'Я не нашла у Вас такой посылки. Хотите выйти из навыка?',
             end_session: false,
           },
           ...static_required_data,
         });
+
+        sessions[session_id].act = Activities.BYE;
       }
     } else if (session_payload.act === Activities.RENAME_INPUT) {
       const { user_id } = session.user;
@@ -721,14 +788,36 @@ router.post('/webhook', async (req, res) => {
 
       res.send({
         response: {
-          text: 'Название посылки сохранено.',
-          tts: 'Название посылки сохранено.',
+          ...BYE_MESSAGE,
+          text: 'Название посылки сохранено. Хотите выйти из навыка?',
+          tts: 'Название посылки сохранено. Хотите выйти из навыка?',
           end_session: false,
         },
         ...static_required_data,
       });
 
-      delete sessions[session_id].act;
+      sessions[session_id].act = Activities.BYE;
+    } else if (session_payload.act === Activities.BYE) {
+      if (request.command === 'да') {
+        res.send({
+          response: {
+            ...END_MESSAGE,
+          },
+          ...static_required_data,
+        });
+
+        delete sessions[session_id];
+      } else {
+        res.send({
+          response: {
+            ...HELLO_MESSAGE,
+          },
+          ...static_required_data,
+        });
+        sessions[session_id] = {
+          skillStarted: true,
+        };
+      }
     }
   }
 });
