@@ -353,6 +353,7 @@ router.post('/webhook', async (req, res) => {
         ...static_required_data,
       });
       delete sessions[session_id];
+      return;
     }
   }
 
