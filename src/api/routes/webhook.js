@@ -345,6 +345,7 @@ router.post('/webhook', async (req, res) => {
       sessions[session_id] = {
         skillStarted: true,
       };
+      return;
     } else if (Activities.isStop() || request.command === 'on_interrupt') {
       res.send({
         response: {
@@ -353,6 +354,18 @@ router.post('/webhook', async (req, res) => {
         ...static_required_data,
       });
       delete sessions[session_id];
+      return;
+    } else if (!session_payload.act && session_payload.act !== 0) {
+      console.log(session_payload.act);
+      res.send({
+        response: {
+          ...HELLO_MESSAGE,
+        },
+        ...static_required_data,
+      });
+      sessions[session_id] = {
+        skillStarted: true,
+      };
       return;
     }
   }
@@ -375,6 +388,7 @@ router.post('/webhook', async (req, res) => {
           },
           ...static_required_data,
         });
+        delete sessions[session_id].act;
       } else {
         const { user_id } = session.user;
         let packageData = await Package.findOne({ userId: user_id, packageNumber: request.command.toUpperCase() }).exec();
