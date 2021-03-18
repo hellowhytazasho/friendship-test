@@ -159,6 +159,7 @@ const Activities = {
   RENAME_INPUT: 7,
   isStop: () => contains(tokens, ['отмена', 'стоп', 'пока']) === 1,
   BYE: 8,
+  YES_OR_NOT: 9,
 };
 
 router.post('/webhook', async (req, res) => {
@@ -262,7 +263,7 @@ router.post('/webhook', async (req, res) => {
         res.send({
           response: {
             text: message,
-            tts: message,
+            tts: `${message} Хотите отследить посылку?`,
             buttons: [{
               title: 'Отследить посылку',
               payload: {
@@ -278,11 +279,15 @@ router.post('/webhook', async (req, res) => {
           },
           ...static_required_data,
         });
+
+        sessions[session_id] = {
+          act: Activities.YES_OR_NOT, skillStarted: true,
+        };
       } else {
         res.send({
           response: {
             text: 'У Вас нет активных посылок.',
-            tts: 'У Вас нет активных посылок.',
+            tts: 'У Вас нет активных посылок. Хотите отследить посылку?',
             buttons: [{
               title: 'Отследить другую посылку',
               payload: {
@@ -376,7 +381,7 @@ router.post('/webhook', async (req, res) => {
         res.send({
           response: {
             text: 'Упс, кажется в трек-номере есть ошибочка.',
-            tts: 'Упс, кажется в трек-номере есть ошибочка.',
+            tts: 'Упс, кажется в трек-номере есть ошибочка. Хотите отследить другую посылку?',
             buttons: [{
               title: 'Отследить другую посылку',
               payload: {
@@ -388,7 +393,10 @@ router.post('/webhook', async (req, res) => {
           },
           ...static_required_data,
         });
-        delete sessions[session_id].act;
+
+        sessions[session_id] = {
+          act: Activities.YES_OR_NOT, skillStarted: true,
+        };
       } else {
         const { user_id } = session.user;
         let packageData = await Package.findOne({ userId: user_id, packageNumber: request.command.toUpperCase() }).exec();
@@ -410,6 +418,29 @@ router.post('/webhook', async (req, res) => {
               const packageEventsLength = el.events.length;
               const lastOperation = el.events[packageEventsLength - 1].operationAttributeOriginal === undefined ? el.events[packageEventsLength - TWO_WORDS].operationAttributeOriginal : el.events[packageEventsLength - 1].operationAttributeOriginal;
               flag = false;
+
+              if (el.events.length === 1) {
+                res.send({
+                  response: {
+                    text: 'Я буду внимательно следить за перемещением посылки, а пока что стоит подождать, пока появятся первые данные о перемещении.',
+                    tts: 'Я буду внимательно следить за перемещением посылки, а пока что стоит подождать, пока появятся первые данные о перемещении. Хотите отследить другую посылку?',
+                    buttons: [{
+                      title: 'Отследить другую посылку',
+                      payload: {
+                        type: 0,
+                      },
+                    },
+                    ],
+                    end_session: false,
+                  },
+                  ...static_required_data,
+                });
+                sessions[session_id] = {
+                  act: Activities.YES_OR_NOT, skillStarted: true,
+                };
+                return;
+              }
+
               res.send({
                 response: {
                   text: `Последний статус: ${lastOperation}. Хотите узнать подробнее?`,
@@ -440,7 +471,7 @@ router.post('/webhook', async (req, res) => {
             res.send({
               response: {
                 text: 'Я не нашла у Вас посылку с таким именем.',
-                tts: 'Я не нашла у Вас посылку с таким именем.',
+                tts: 'Я не нашла у Вас посылку с таким именем. Хотите отследить другую посылку?',
                 buttons: [{
                   title: 'Отследить другую посылку',
                   payload: {
@@ -452,7 +483,9 @@ router.post('/webhook', async (req, res) => {
               },
               ...static_required_data,
             });
-            delete sessions[session_id].act;
+            sessions[session_id] = {
+              act: Activities.YES_OR_NOT, skillStarted: true,
+            };
             return;
           }
           if (!flag) {
@@ -465,7 +498,7 @@ router.post('/webhook', async (req, res) => {
           res.send({
             response: {
               text: 'Трек-код не действителен.',
-              tts: 'Трек-код не действителен.',
+              tts: 'Трек-код не действителен. Хотите отследить другую посылку?',
               buttons: [{
                 title: 'Отследить другую посылку',
                 payload: {
@@ -477,7 +510,9 @@ router.post('/webhook', async (req, res) => {
             },
             ...static_required_data,
           });
-          delete sessions[session_id].act;
+          sessions[session_id] = {
+            act: Activities.YES_OR_NOT, skillStarted: true,
+          };
           return;
         }
 
@@ -485,7 +520,7 @@ router.post('/webhook', async (req, res) => {
           res.send({
             response: {
               text: 'Я буду внимательно следить за перемещением посылки, а пока что стоит подождать, пока появятся первые данные о перемещении.',
-              tts: 'Я буду внимательно следить за перемещением посылки, а пока что стоит подождать, пока появятся первые данные о перемещении.',
+              tts: 'Я буду внимательно следить за перемещением посылки, а пока что стоит подождать, пока появятся первые данные о перемещении. Хотите отследить другую посылку?',
               buttons: [{
                 title: 'Отследить другую посылку',
                 payload: {
@@ -497,7 +532,9 @@ router.post('/webhook', async (req, res) => {
             },
             ...static_required_data,
           });
-          delete sessions[session_id].act;
+          sessions[session_id] = {
+            act: Activities.YES_OR_NOT, skillStarted: true,
+          };
           return;
         }
 
@@ -540,7 +577,7 @@ router.post('/webhook', async (req, res) => {
         let lastWeight;
         let lastService;
 
-        if (serviceName === 'Track24') {
+        if (serviceName === 'Track24' || serviceName === 'Track24.ru') {
           lastPlace = packageData.events[packageEventsLength - TWO_ELEMENTS].operationPlaceNameOriginal === '' ? 'неизвестно' : packageData.events[packageEventsLength - TWO_ELEMENTS].operationPlaceNameOriginal;
           lastWeight = packageData.events[packageEventsLength - TWO_ELEMENTS].itemWeight === '' ? 'неизвестно' : packageData.events[packageEventsLength - TWO_ELEMENTS].itemWeight;
           lastService = packageData.events[packageEventsLength - TWO_ELEMENTS].serviceName === '' ? 'неизвестно' : packageData.events[packageEventsLength - TWO_ELEMENTS].serviceName;
@@ -553,7 +590,7 @@ router.post('/webhook', async (req, res) => {
         res.send({
           response: {
             text: `Подробности посылки: \nМаршрут: ${lastPlace} \nВес: ${lastWeight} \nОтправитель: ${lastService} \nПриблизительная дата прибытия: ${deliveredDateTime}.`,
-            tts: `Подробности посылки: \nМаршрут: ${lastPlace} \nВес: ${lastWeight} \nОтправитель: ${lastService} \nПриблизительная дата прибытия: ${deliveredDateTime}.`,
+            tts: `Подробности посылки: \nМаршрут: ${lastPlace} \nВес: ${lastWeight} \nОтправитель: ${lastService} \nПриблизительная дата прибытия: ${deliveredDateTime}. Хотите отследить другую посылку?`,
             buttons: [{
               title: 'Отследить другую посылку',
               payload: {
@@ -566,7 +603,9 @@ router.post('/webhook', async (req, res) => {
           ...static_required_data,
         });
 
-        delete sessions[session_id].act;
+        sessions[session_id] = {
+          act: Activities.YES_OR_NOT, skillStarted: true,
+        };
       } else {
         res.send({
           response: {
@@ -800,7 +839,6 @@ router.post('/webhook', async (req, res) => {
         newPackageName: request.original_utterance.trim(),
       };
       await changePackageName(user_id, session_payload.trackNumber, newName);
-
       res.send({
         response: {
           ...BYE_MESSAGE,
@@ -832,6 +870,38 @@ router.post('/webhook', async (req, res) => {
         sessions[session_id] = {
           skillStarted: true,
         };
+      }
+    } else if (session_payload.act === Activities.YES_OR_NOT) {
+      if (request.command === 'да') {
+        res.send({
+          response: {
+            text: 'Чтобы отследить посылку, введите трек-номер или название посылки.',
+            tts: 'Чтобы отследить посылку, введите трек-номер или название посылки.',
+            end_session: false,
+          },
+          ...static_required_data,
+        });
+        sessions[session_id] = {
+          act: Activities.TRACK, skillStarted: true,
+        };
+      } else if (request.command === 'нет') {
+        res.send({
+          response: {
+            ...BYE_MESSAGE,
+          },
+          ...static_required_data,
+        });
+
+        sessions[session_id].act = Activities.BYE;
+      } else {
+        res.send({
+          response: {
+            ...HELLO_MESSAGE,
+          },
+          ...static_required_data,
+        });
+
+        delete sessions[session_id].act;
       }
     }
   }
