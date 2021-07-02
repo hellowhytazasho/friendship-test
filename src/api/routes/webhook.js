@@ -171,8 +171,6 @@ router.post('/webhook', async (req, res) => {
   } = body;
   logger.info(body);
 
-  session.user = { user_id: 123456789 }; // удалить это на проде
-
   const { session_id } = session;
   const static_required_data = {
     session,
@@ -223,8 +221,8 @@ router.post('/webhook', async (req, res) => {
       };
       return;
     } else if (Activities.isTransit()) {
-      const { user_id } = session.user;
-      const userPackages = await Package.find({ userId: user_id, deliveredStatus: 0 });
+      const { user_vk_id } = session.user;
+      const userPackages = await Package.find({ userId: user_vk_id, deliveredStatus: 0 });
       if (userPackages.length) {
         let message = 'У Вас в пути';
         const packegeWithName = [];
@@ -398,15 +396,15 @@ router.post('/webhook', async (req, res) => {
           act: Activities.YES_OR_NOT, skillStarted: true,
         };
       } else {
-        const { user_id } = session.user;
-        let packageData = await Package.findOne({ userId: user_id, packageNumber: request.command.toUpperCase() }).exec();
-        const packageDataWithName = await Package.find({ userId: user_id });
+        const { user_vk_id } = session.user;
+        let packageData = await Package.findOne({ userId: user_vk_id, packageNumber: request.command.toUpperCase() }).exec();
+        const packageDataWithName = await Package.find({ userId: user_vk_id });
         let flag = true;
 
         if (packageData === null) {
           try {
-            packageData = await addPackage(user_id, { packageNumber: request.command.toUpperCase() });
-            await Package.remove({ userId: user_id, events: { $exists: true, $size: 0 } });
+            packageData = await addPackage(user_vk_id, { packageNumber: request.command.toUpperCase() });
+            await Package.remove({ userId: user_vk_id, events: { $exists: true, $size: 0 } });
           } catch (error) {
             console.log('err');
           }
@@ -617,13 +615,13 @@ router.post('/webhook', async (req, res) => {
         sessions[session_id].act = Activities.BYE;
       }
     } else if (session_payload.act === Activities.NOTIFICATION) {
-      const { user_id } = session.user;
+      const { user_vk_id } = session.user;
 
       if (request.command === 'обо всех') {
-        const userPackages = await Package.find({ userId: user_id, deliveredStatus: 0 }).exec();
+        const userPackages = await Package.find({ userId: user_vk_id, deliveredStatus: 0 }).exec();
         if (userPackages) {
           await Package.updateMany({
-            userId: user_id,
+            userId: user_vk_id,
           }, {
             $set: {
               notification: false,
@@ -670,9 +668,9 @@ router.post('/webhook', async (req, res) => {
         sessions[session_id] = { act: Activities.NOTIFICATION_INPUT_TRACK, skillStarted: true };
       }
     } else if (session_payload.act === Activities.NOTIFICATION_INPUT_TRACK) {
-      const { user_id } = session.user;
+      const { user_vk_id } = session.user;
 
-      const userPackages = await Package.find({ userId: user_id }).exec();
+      const userPackages = await Package.find({ userId: user_vk_id }).exec();
       let flag = true;
 
       userPackages.forEach(async (el) => {
@@ -708,7 +706,7 @@ router.post('/webhook', async (req, res) => {
           flag = false;
 
           await Package.updateOne({
-            userId: user_id,
+            userId: user_vk_id,
             packageNumber: request.original_utterance.toUpperCase(),
           }, {
             $set: {
@@ -747,9 +745,9 @@ router.post('/webhook', async (req, res) => {
     } else if (session_payload.act === Activities.NOTIFICATION_ACCEPT) {
       console.log(request.command);
       if (request.command === 'верно') {
-        const { user_id } = session.user;
+        const { user_vk_id } = session.user;
         await Package.updateOne({
-          userId: user_id,
+          userId: user_vk_id,
           packageNumber: session_payload.trackNumber,
         }, {
           $set: {
@@ -784,8 +782,8 @@ router.post('/webhook', async (req, res) => {
       // eslint-disable-next-line no-useless-return
       return;
     } else if (session_payload.act === Activities.RENAME) {
-      const { user_id } = session.user;
-      const userPackages = await Package.find({ userId: user_id }).exec();
+      const { user_vk_id } = session.user;
+      const userPackages = await Package.find({ userId: user_vk_id }).exec();
       let flag = true;
 
       userPackages.forEach((el) => {
@@ -834,11 +832,11 @@ router.post('/webhook', async (req, res) => {
         sessions[session_id].act = Activities.BYE;
       }
     } else if (session_payload.act === Activities.RENAME_INPUT) {
-      const { user_id } = session.user;
+      const { user_vk_id } = session.user;
       const newName = {
         newPackageName: request.original_utterance.trim(),
       };
-      await changePackageName(user_id, session_payload.trackNumber, newName);
+      await changePackageName(user_vk_id, session_payload.trackNumber, newName);
       res.send({
         response: {
           ...BYE_MESSAGE,
